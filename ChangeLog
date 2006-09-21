@@ -1,3 +1,14 @@
+2006-09-21 Hans Baier  <hansfbaier@googlemail.com>
+	- Initial release (0.5)
+	* PBPbxNativeTarget.m ([PBPbxNativeTarget -addPath:withFileReferenceKey:toArray:type:]):
+	- the path of SOURCE_ROOT referenced files are added to include dirs
+	- refactored getters using return AUTORELEASE(RETAIN(xxx))
+	* PBPbxProject.m: refactored getters using 
+	  return AUTORELEASE(RETAIN(xxx))
+	* README: added
+	* cmdline.h:
+	* optionsparser.ggo: changed version to 0.5
+
 2006-09-16 Hans Baier  <hansfbaier@googlemail.com>
 	- Added support for Panther xcode files
 	- added support for version in framework

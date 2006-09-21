@@ -437,6 +437,10 @@
 	{
 	  NSString *newPath = [@"./" stringByAppendingPathComponent: path];
 
+	  [self addPathComponentsToIncludeDirs: 
+		  [[path stringByDeletingLastPathComponent]
+		    pathComponents]];
+
 	  NSDebugMLog(@"Adding file with SOURCE_ROOT-path: %@", newPath);
 	  [anArray addObject: path];
 	}
@@ -542,77 +546,77 @@
 
 - (NSString *) targetKey
 {
-  return targetKey;
+  return AUTORELEASE(RETAIN(targetKey));
 }
 
 - (NSString *) targetName
 {
-  return targetName;
+  return AUTORELEASE(RETAIN(targetName));
 }
 
 - (NSString *) targetType
 {
-  return targetType;
+  return AUTORELEASE(RETAIN(targetType));
 }
 
 - (NSString *) infoPlist
 {
-  return infoPlist;
+  return AUTORELEASE(RETAIN(infoPlist));
 }
 
 - (NSString *) infoPlistFile
 {
-  return infoPlistFile;
+  return AUTORELEASE(RETAIN(infoPlistFile));
 }
 
 - (NSString *) productVersion
 {
-  return productVersion;
+  return AUTORELEASE(RETAIN(productVersion));
 }
 
 - (NSMutableSet *) includeDirs
 {
-  return includeDirs;
+  return AUTORELEASE(RETAIN(includeDirs));
 }
 
 - (NSMutableArray *) headers
 {
-  return headers;
+  return AUTORELEASE(RETAIN(headers));
 }
 
 - (NSMutableSet *) headerNonGroupDirs;
 {
-  return headerNonGroupDirs;
+  return AUTORELEASE(RETAIN(headerNonGroupDirs));
 }
 
 - (NSMutableArray *) sources
 {
-  return sources;
+  return AUTORELEASE(RETAIN(sources));
 }
 
 - (NSMutableSet *) languages
 {
-  return languages;
+  return AUTORELEASE(RETAIN(languages));
 }
 
 - (NSMutableArray *) resources
 {
-  return resources;
+  return AUTORELEASE(RETAIN(resources));
 }
 
 - (NSMutableArray *) localizedResources
 {
-  return localizedResources;
+  return AUTORELEASE(RETAIN(localizedResources));
 }
 
 - (NSMutableArray *) frameworks
 {
-  return frameworks;
+  return AUTORELEASE(RETAIN(frameworks));
 }
 
 - (NSMutableSet *) targetDependencies
 {
-  return targetDependencies;
+  return AUTORELEASE(RETAIN(targetDependencies));
 }
 
 

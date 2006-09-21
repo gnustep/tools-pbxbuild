@@ -15,11 +15,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 #ifndef CMDLINE_PARSER_PACKAGE
-#define CMDLINE_PARSER_PACKAGE "xcodebuild"
+#define CMDLINE_PARSER_PACKAGE "pbxbuild"
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
-#define CMDLINE_PARSER_VERSION "0.3"
+#define CMDLINE_PARSER_VERSION "0.5"
 #endif
 
 struct gengetopt_args_info

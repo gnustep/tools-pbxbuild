@@ -1,6 +1,6 @@
 # input file for gengetopt 
-package "xcodebuild"
-version "0.3"
+package "pbxbuild"
+version "0.5"
 
 purpose "This program builds Xcode projects by converting it to a GNUmakefile"
 

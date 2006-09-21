@@ -1,0 +1,37 @@
+GENERAL:
+
+This tool converts XCode(tm) projects into GNUmakefiles and builds them.
+Those GNUmakefiles may be the basis for further user modifications
+in order to make up for the platform differences of GNUstep and OS X.
+Currently OSX Version 3.9 and 4.2 project files are supported.
+
+It works fairly well for small and medium sized projects.
+However, this tool has no magic superpowers, especially:
+	- It only processes a part of the project file necessary to
+	  create generic GNUmakefiles
+	- It cannot know about platform issues (e.g. whether there are
+	  modifications needed in order to compile the OS X project
+	  correctly on GNUstep)
+
+BUILD / INSTALL:
+Go to the project directory and type
+make
+make install
+
+USE:
+getting help:                   pbxbuild -h
+
+building a project 
+in the current directory:       pbxbuild
+
+generating the makefiles only:  pbxbuild -g
+
+OUTPUT:
+A directory pbxbuild is created. It contains an aggregate GNUmakefile and a
+directory for every Target in the project with subproject
+GNUmakefiles. The target directories have the source tree symlinked
+into it.
+
+CAUTION: 
+Every invocation of pbxbuild removes the previous pbxbuild tree 
+without warning!

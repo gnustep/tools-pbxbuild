@@ -227,17 +227,17 @@
 
 - (NSArray *) targets
 {
-  return targets;
+  return AUTORELEASE(RETAIN(targets));
 }
 
 - (NSDictionary *) objects 
 {
-  return objects;
+  return AUTORELEASE(RETAIN(objects));
 }
 
 - (NSString *) version
 {
-  return version;
+  return AUTORELEASE(RETAIN(version));
 }
 
 @end
