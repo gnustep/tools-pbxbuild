@@ -18,6 +18,11 @@ Go to the project directory and type
 make
 make install
 
+note: cmdline.c and cmdline.h are generated out of the file
+optionsparser.ggo using GNU gengetopt
+(www.gnu.org/software/gengetopt/gengetopt.html), so please
+dont modify them directly.
+
 USE:
 getting help:                   pbxbuild -h
 
@@ -35,3 +40,6 @@ into it.
 CAUTION: 
 Every invocation of pbxbuild removes the previous pbxbuild tree 
 without warning!
+
+Bug reports, comments and wishes welcome,
+please send to hansfbaier (AT) googlemail (dot) com
