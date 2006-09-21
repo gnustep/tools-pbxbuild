@@ -1,0 +1,24 @@
+2006-09-16 Hans Baier  <hansfbaier@googlemail.com>
+	- Added support for Panther xcode files
+	- added support for version in framework
+	- improved support for group paths (Pantomime.framework from GNUMail
+	  compiles now)
+
+2006-09-02 Hans Baier  <hansfbaier@googlemail.com>
+	- Added support for target dependency resolution
+	- Added support for simple include path handling
+	Therefore,the  iTerm version included in Etoile can be 
+	compiled with pbxbuild now.
+	
+2006-08-21 Hans Baier  <hansfbaier@googlemail.com>
+	* PBPbxGroup.m:
+	* PBPbxNativeTarget.m:
+	* PBPbxProject.m:
+	* PBPbxGroup.h:
+	- Added support for correct PBXGroup path resolution
+	- Fixed Bug: skipped targets still inserted into the targets list
+	* PBPbxMakefileGenerator.m (generateStandardSectionsForTarget:inMakefile:):
+	skipping headers section if target type not bundle of framework
+
+2006-08-19 Hans Baier  <hansfbaier@googlemail.com>
+	First functional version (0.3) though many bugs still exist.

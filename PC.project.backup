@@ -1,0 +1,78 @@
+{
+    CLASS_FILES = (
+	PBMakefileGenerator.m,
+	PBPbxProject.m,
+	PBPbxNativeTarget.m,
+	PBDevelopmentHelper.m,
+	PBPbxGroup.m
+    );
+    COMPILEROPTIONS = "";
+    CPPOPTIONS = "";
+    CREATION_DATE = "2006-08-09 04:23:23 +0200";
+    DOCU_FILES = (
+    );
+    FRAMEWORKS = (
+    );
+    HEADER_FILES = (
+	cmdline.h,
+	PBMakefileGenerator.h,
+	PBPbxProject.h,
+	PBPbxNativeTarget.h,
+	PBDevelopmentHelper.h,
+	PBPbxGroup.h
+    );
+    IMAGES = (
+    );
+    INSTALLDIR = "$(HOME)/GNUstep/Tools";
+    LANGUAGE = English;
+    LAST_EDITING = "2006-09-21 06:02:22 +0200";
+    LIBRARIES = (
+	"gnustep-base"
+    );
+    LINKEROPTIONS = "";
+    LOCALIZED_RESOURCES = (
+    );
+    MAKEFILEDIR = "$(GNUSTEP_MAKEFILES)";
+    OBJC_COMPILEROPTIONS = "";
+    OTHER_RESOURCES = (
+	"Info-gnustep.plist"
+    );
+    OTHER_SOURCES = (
+	main.m,
+	cmdline.c
+    );
+    PC_WINDOWS = {
+	ProjectWindow = "154 11 864 735 0 0  2048 768 ";
+	ShowToolbar = YES;
+    };
+    PROJECT_AUTHORS = (
+	"Hans Baier"
+    );
+    PROJECT_COPYRIGHT = "Copyright (C) 2006";
+    PROJECT_COPYRIGHT_DESC = GPL;
+    PROJECT_CREATOR = "Hans Baier,,,";
+    PROJECT_DESCRIPTION = "This tool builds XCode project files (OS X 3.9 and 4.2) by generating GNUmakefiles";
+    PROJECT_GROUP = "No group available!";
+    PROJECT_MAINTAINER = "Hans Baier,,,";
+    PROJECT_NAME = pbxbuild;
+    PROJECT_RELEASE = 0.1;
+    PROJECT_SUMMARY = "No summary available!";
+    PROJECT_TYPE = Tool;
+    PROJECT_URL = "";
+    SEARCH_HEADER_DIRS = (
+    );
+    SEARCH_LIB_DIRS = (
+    );
+    SUBPROJECTS = (
+    );
+    SUPPORTING_FILES = (
+	GNUmakefile.preamble,
+	GNUmakefile,
+	GNUmakefile.postamble
+    );
+    TOOLICON = "";
+    USER_LANGUAGES = (
+	German,
+	English
+    );
+}

@@ -1,0 +1,11 @@
+# input file for gengetopt 
+package "xcodebuild"
+version "0.3"
+
+purpose "This program builds Xcode projects by converting it to a GNUmakefile"
+
+# Options
+option  "project"          p "The Project to build (.xcode, .xcodeproj)"      string     no
+
+option  "generate-makefile-only"        g "This only generates project makefiles without running make"        flag       off
+option  "debug"                         d "Turn on debug logging"	flag	off
