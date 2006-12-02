@@ -1,3 +1,17 @@
+2006-12-02 18:43-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* GNUmakefile
+	* main.m
+	* PBMakefileGenerator.h
+	* PBMakefileGenerator.m
+	* PBPbxGroup.h
+	* PBPbxGroup.m
+	* PBPbxNativeTarget.h
+	* PBPbxNativeTarget.m
+	* PBPbxProject.h
+	* PBPbxProject.m: General cleanup of code.  Corrected code which
+	was causing warnings.
+
 2006-09-21 Hans Baier  <hansfbaier@googlemail.com>
 	- Initial release (0.5)
 	* PBPbxNativeTarget.m ([PBPbxNativeTarget -addPath:withFileReferenceKey:toArray:type:]):

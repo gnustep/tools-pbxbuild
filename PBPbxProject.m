@@ -41,7 +41,6 @@
 - (void) addGroupRecursivelyByKey: (NSString *)aKey
 		       parentPath: (NSString *)parentPath
 {
-  NSString     *childGroupKey;
   NSEnumerator *e;
   NSDictionary *groupOrFile;
   NSString     *childKey;
@@ -192,14 +191,16 @@
   return self;
 }
 
--dealloc
+- (void) dealloc
 {
+  
   RELEASE(groups);
   RELEASE(targets);
   RELEASE(classes);
   RELEASE(rootObject);  
   RELEASE(version);
   RELEASE(objects);
+  [super dealloc];
 }
 
 - (BOOL) isSimpleProject

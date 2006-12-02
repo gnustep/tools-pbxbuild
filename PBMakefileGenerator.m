@@ -158,7 +158,7 @@
     withTargetName: (NSString *)tName
 	 andPrefix: (NSString *)prefix
 {
-  NSEnumerator *e = [collection objectEnumerator];  
+  NSEnumerator *e = [(NSArray *)collection objectEnumerator];  
   NSString     *str;
   
   str = [e nextObject];
@@ -228,9 +228,10 @@
 }
 
 
-- dealloc
+- (void) dealloc
 {
   RELEASE(project);
+  [super dealloc];
 }
 
 - (void) setProject: (PBPbxProject *) aProject

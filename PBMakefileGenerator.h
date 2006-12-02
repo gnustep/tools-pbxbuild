@@ -39,7 +39,7 @@
  */
 - (PBMakefileGenerator *) initWithProject: (PBPbxProject *) aProject;
 
-- dealloc;
+- (void) dealloc;
 
 /**
  * set aProject for which a makefile should be generated

@@ -25,13 +25,13 @@
 #include "PBPbxGroup.h"
 
 @implementation PBPbxGroup
-- (PBPbxGroup *) initWithGroupKey: (NSString *)groupKey inObjects: objects
+- (PBPbxGroup *) initWithGroupKey: (NSString *)groupKey inObjects: myobjects
 {
   RETAIN(groupKey);
   self = [super init];
-  ASSIGN(self->objects, objects);
+  ASSIGN(self->objects, myobjects);
 
-  group = [objects objectForKey: groupKey];
+  group = [myobjects objectForKey: groupKey];
   name  = [group   objectForKey: @"name" ];
   path  = [group   objectForKey: @"path" ];
 
@@ -40,10 +40,11 @@
   return self;
 }
 
-- dealloc
+- (void) dealloc
 {
   RELEASE(files);
   RELEASE(objects);  
+  [super dealloc];
 }
 
 - (NSString *) name

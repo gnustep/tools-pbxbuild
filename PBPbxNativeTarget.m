@@ -147,7 +147,7 @@
   if (targetType == nil)
     {
       NSLog(@"Don't know how to handle target type: '%@', quitting...", 
-	    [target objectForkey: @"productType"]);
+	    [target objectForKey: @"productType"]);
       exit(EXIT_FAILURE);
     }
 
@@ -459,17 +459,17 @@
 @end
 
 @implementation PBPbxNativeTarget
-- (PBPbxNativeTarget *) initWithProject: (PBPbxProject *)project
-			      andTarget: (NSDictionary *)target
-			  withTargetKey: (NSString *)targetKey
+- (PBPbxNativeTarget *) initWithProject: (PBPbxProject *)aproject
+			      andTarget: (NSDictionary *)atarget
+			  withTargetKey: (NSString *)atargetKey
 {
   BOOL success = NO;
   
   self = [super init];
-  ASSIGN(self->project, project);
+  ASSIGN(self->project, aproject);
   ASSIGN(self->objects, [project objects]);
-  RETAIN(target);
-  ASSIGN(self->targetKey, targetKey);
+  RETAIN(atarget);
+  ASSIGN(self->targetKey, atargetKey);
 
   ASSIGN(includeDirs,        [NSMutableSet     setWithCapacity: 5 ]);
   ASSIGN(headers,            [NSMutableArray arrayWithCapacity: 50]);
@@ -482,15 +482,15 @@
   ASSIGN(targetDependencies,       [NSMutableArray arrayWithCapacity: 5 ]);
 
   // set up include dirs  
-  [self setUpIncludeDirsForTarget: target];
+  [self setUpIncludeDirsForTarget: atarget];
 
   // raverse the build phases
-  success = [self traverseBuildPhasesOfTarget: target];
+  success = [self traverseBuildPhasesOfTarget: atarget];
 
   // store the dependency keys
-  ASSIGN(dependencyKeys,     [target objectForKey: @"dependencies"]);
+  ASSIGN(dependencyKeys, [atarget objectForKey: @"dependencies"]);
 
-  RELEASE(target);
+  RELEASE(atarget);
   if (success == YES)
     return self;
   else
@@ -500,7 +500,7 @@
     }
 }
 
-- (BOOL) resolveDependencyKeys
+- (void) resolveDependencyKeys
 {
   NSEnumerator *e;
   NSString     *dependencyKey;
@@ -510,13 +510,17 @@
     {
       NSDictionary *pbxTargetDependency = 
 	[objects objectForKey: dependencyKey];
-      NSString *targetKey = [pbxTargetDependency objectForKey: @"target"];
+      NSString *aTargetKey = [pbxTargetDependency objectForKey: @"target"];
       NSEnumerator *t = [[project targets] objectEnumerator];
       PBPbxNativeTarget *target;
 
       while ( (target = [t nextObject]) )
-	if ([[target targetKey] isEqual: targetKey])
-	    [targetDependencies addObject: target];
+	{
+	  if ([[target targetKey] isEqual: aTargetKey])
+	    {
+	      [targetDependencies addObject: target];
+	    }
+	}
     }
 }
 
@@ -656,7 +660,7 @@
   return result;
 }
 
-- dealloc
+- (void) dealloc
 {
   DESTROY(targetDependencies);
   DESTROY(dependencyKeys);  

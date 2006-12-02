@@ -41,7 +41,7 @@
  */
 - (PBPbxGroup *) initWithGroupKey: (NSString *)groupKey inObjects: objects;
 
-- dealloc;
+- (void) dealloc;
 
 /**
  * getter for the name of the group

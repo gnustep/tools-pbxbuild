@@ -46,12 +46,12 @@ main(int argc, const char *argv[], char *env[])
   NSString                   *projectMakefile;
   PBPbxNativeTarget          *target;
   PBMakefileGenerator        *generator;
-  NSString                   *makefile;
   struct gengetopt_args_info args_info;
   NSEnumerator               *e;
   NSFileManager              *fileManager;
   NSString                   *pbxbuildDir;
   NSTask                     *make;
+  // NSString                   *makefile;
 
   CREATE_AUTORELEASE_POOL(pool);
   fileManager = [NSFileManager defaultManager];

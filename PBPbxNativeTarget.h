@@ -68,7 +68,7 @@
  * sets the field targetDependencies with links to the other [PBPbxNativeTarget]s
  * This assumes that the target List of project is already complete
  */
-- (BOOL) resolveDependencyKeys;
+- (void) resolveDependencyKeys;
 
 /**
  * compares the current target with anotherTarget: 
@@ -172,7 +172,7 @@
  */
 - (NSString *) description;
 
-- dealloc;
+- (void) dealloc;
 @end
 
 #endif // _PBPBXNATIVETARGET_H_

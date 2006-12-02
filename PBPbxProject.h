@@ -51,7 +51,7 @@
  */
 - (PBPbxProject *) initWithFile: (NSString *)fileName;
 
-- dealloc;
+- (void) dealloc;
 
 /**
  * YES, if the project contains only one target,
