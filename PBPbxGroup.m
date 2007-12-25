@@ -80,7 +80,14 @@
 
       ASSIGN(files, [NSMutableSet setWithCapacity: 20]);
       while ( (key = [e nextObject]) )
-	  [files addObject: key];
+	{
+	  // it is possible in some older xcode implementations to 
+	  // have duplications.
+	  if([files objectForKey: key] == nil)
+	    {
+	      [files addObject: key];
+	    }
+	}
     }
 
   return [files containsObject: pbxFileReferenceKey];

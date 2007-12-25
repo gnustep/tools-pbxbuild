@@ -430,7 +430,10 @@
 		[self addPathComponentsToIncludeDirs: 
 			[[path stringByDeletingLastPathComponent]
 			  pathComponents]];
-	      [anArray addObject: path];
+	      if([anArray containsObject: path] == NO)
+		{
+		  [anArray addObject: path];
+		}
 	    }
 	}
       else if ([sourceTree isEqual: @"SOURCE_ROOT"]) 

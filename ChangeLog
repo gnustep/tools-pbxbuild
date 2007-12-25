@@ -1,3 +1,10 @@
+2007-12-25 11:58-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBPbxGroup.m
+	* PBPbxNativeTarget.m: Remove duplications from the groups and
+	the source files to prevent "multiple definition" errors when 
+	building.
+
 2006-12-02 18:43-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* GNUmakefile
