@@ -121,50 +121,53 @@
   NSDictionary *buildPhase;
   NSEnumerator *e;
 
-  if ( [[project version] isEqual: PBX_VERSION_TIGER] ) 
+  if([[project version] isEqual: PBX_VERSION_TIGER]) 
     {
-    if ( ![[target objectForKey: @"isa"] isEqual: @"PBXNativeTarget"] )
-      {
-	NSLog(@"Don't know how to handle target with type: %@, skipping...",
-	      [target objectForKey: @"isa"] );
-	return NO; 
-      }
-
-    buildSettings = [self getBuildSettingsTigerForTarget: target];
-
-    ASSIGN(targetType, [self standardizeTigerTargetType: 
-			       [target objectForKey: @"productType"]]);
+      if(![[target objectForKey: @"isa"] isEqual: @"PBXNativeTarget"])
+        {
+          NSLog(@"Don't know how to handle target with type: %@, skipping...",
+                [target objectForKey: @"isa"] );
+          return NO; 
+        }      
+      buildSettings = [self getBuildSettingsTigerForTarget: target];    
+      ASSIGN(targetType, [self standardizeTigerTargetType: 
+                                 [target objectForKey: @"productType"]]);
     }
-  else if ([[project version] isEqual: PBX_VERSION_PANTHER])
+  else if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
       buildSettings = [target objectForKey: @"buildSettings"];
       ASSIGN(targetType, [self standardizePantherTargetType: 
 				 [target objectForKey: @"isa"]]);
     }
-  
+  else
+    {
+      NSLog(@"Unsupported project version: '%@', quitting...",[project version]);
+      exit(EXIT_FAILURE);
+    }
+
   ASSIGN(targetName, [buildSettings objectForKey: @"PRODUCT_NAME"]);
 
-  if (targetType == nil)
+  if(targetType == nil)
     {
       NSLog(@"Don't know how to handle target type: '%@', quitting...", 
 	    [target objectForKey: @"productType"]);
       exit(EXIT_FAILURE);
     }
 
-  if ([[project version] isEqual: PBX_VERSION_PANTHER]) 
+  if([[project version] isEqual: PBX_VERSION_PANTHER]) 
     {
       infoPlistFile = nil;
       ASSIGN(infoPlist, [[target objectForKey: @"productSettingsXML"] 
 			  propertyList]);
       
     }
-  else if ([[project version] isEqual: PBX_VERSION_TIGER])
+  else if([[project version] isEqual: PBX_VERSION_TIGER])
     {
       ASSIGN(infoPlistFile, [buildSettings objectForKey: @"INFOPLIST_FILE"]);
       ASSIGN(infoPlist, [NSDictionary 
 			  dictionaryWithContentsOfFile: infoPlistFile]);
     }
-
+  
   ASSIGN(productVersion, [infoPlist objectForKey: @"CFBundleVersion"]);
 
   // this one will be symlinked to the real Info.plist file
