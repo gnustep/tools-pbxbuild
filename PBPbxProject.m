@@ -220,8 +220,10 @@
   PBPbxGroup   *group;
 
   while ( (group = [e nextObject]) )
+    {
       if ([group containsFileReference: pbxFileReferenceKey])
 	return [group path];
+    }
 
   return nil;
 }
