@@ -1,3 +1,8 @@
+2008-07-08 16:10-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBPbxGroup.m: Correction for bug #23795.  Patch submitted by
+	Peter Cooper <comrade@obverse.com.au>
+
 2008-02-11 00:29-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBPbxNativeTarget.m: Give meaningful error when the project type is

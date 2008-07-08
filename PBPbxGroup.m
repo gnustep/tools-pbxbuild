@@ -83,7 +83,7 @@
 	{
 	  // it is possible in some older xcode implementations to 
 	  // have duplications.
-	  if([files objectForKey: key] == nil)
+	  if([files containsObject: key] == NO)
 	    {
 	      [files addObject: key];
 	    }
