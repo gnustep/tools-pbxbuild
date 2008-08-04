@@ -63,7 +63,7 @@
   if ([[target includeDirs] count] == 0)
     return;
 
-  [makefile appendFormat: @"\n\n%@_INCLUDE_DIRS=", [target targetName]];
+  [makefile appendFormat: @"\n\n%@_INCLUDE_DIRS=", [target targetNameReplacingSpaces]];
   while ( (includeDir = [e nextObject]) )
     [makefile appendFormat: @"\\\n\t-I%@", 
 	      [@"." stringByAppendingPathComponent: includeDir]];
@@ -105,7 +105,7 @@
 - (void) generateStandardSectionsForTarget: (PBPbxNativeTarget *)target
 			        inMakefile: (NSMutableString *)makefile
 {
-  NSString     *tName = [target targetName];      
+  NSString     *tName = [target targetNameReplacingSpaces];      
   NSString     *type  = [target targetType]; 
 
   [makefile appendFormat: @"\n\n%@_NAME=%@", [type uppercaseString], tName];
@@ -184,7 +184,7 @@
     return;
 
   objcLibs = [objcLibs stringByAppendingFormat: @"%@_OBJC_LIBS+=",
-		       [target targetName]];
+		       [target targetNameReplacingSpaces]];
 
   [additionalLibDirs appendString: @"\nADDITIONAL_LIB_DIRS="];
 
@@ -194,7 +194,7 @@
 	{
 	  // linking the lib
 	  objcLibs = [objcLibs stringByAppendingFormat: @" -l%@", 
-			       [dependency targetName]];
+			       [dependency targetNameReplacingSpaces]];
 	  
 	  // adding the library dir
 	  // The path to the subproject
@@ -241,7 +241,7 @@
 
 - (NSString *) getSubprojectNameForTarget: (PBPbxNativeTarget *)target
 {
-  return [[target targetName] 
+  return [[target targetNameReplacingSpaces] 
 	   stringByAppendingPathExtension: [target targetType]];
 }
 

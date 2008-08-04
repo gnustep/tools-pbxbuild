@@ -101,6 +101,11 @@
 - (NSString *) targetName;
 
 /**
+ * getter Method
+ */
+- (NSString *) targetNameReplacingSpaces;
+
+/**
  * getter Method -- returns the normalized target type 
  * (app, bundle, framework, tool, etc.)
  */

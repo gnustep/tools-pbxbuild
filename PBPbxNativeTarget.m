@@ -564,6 +564,12 @@
   return AUTORELEASE(RETAIN(targetName));
 }
 
+- (NSString *) targetNameReplacingSpaces
+{
+  return [targetName stringByReplacingString: @" " 
+		     withString: @"_"];
+}
+
 - (NSString *) targetType
 {
   return AUTORELEASE(RETAIN(targetType));

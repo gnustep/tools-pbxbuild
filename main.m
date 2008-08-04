@@ -132,9 +132,11 @@ main(int argc, const char *argv[], char *env[])
       NSEnumerator *f = [projectDirEntries objectEnumerator];
       NSString   *projectDirEntry;
       NSString   *makefile;
+      NSString   *newTName = [[target targetName] stringByReplacingString: @" "
+						  withString: @"_"];
       NSString   *targetDir = 
 	[pbxbuildDir stringByAppendingPathComponent:
-		       [[target targetName] 
+		       [newTName
 			 stringByAppendingPathExtension: [target targetType]]];
       [fileManager createDirectoryAtPath: targetDir attributes: nil];
       
