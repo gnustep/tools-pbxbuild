@@ -1,3 +1,8 @@
+2008-08-29 22:48-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBPbxNativeTarget.m: If the PRODUCT_NAME key isn't available then
+	fall back to using the "name" key in the target dictionary.
+
 2008-08-03 20:22-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* GNUmakefile

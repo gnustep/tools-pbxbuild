@@ -146,6 +146,10 @@
     }
 
   ASSIGN(targetName, [buildSettings objectForKey: @"PRODUCT_NAME"]);
+  if(targetName == nil)
+    {
+      ASSIGN(targetName, [target objectForKey: @"name"]);
+    }
 
   if(targetType == nil)
     {
