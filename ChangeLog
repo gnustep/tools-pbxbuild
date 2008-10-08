@@ -1,3 +1,8 @@
+2008-10-08 00:08-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* main.m: Link using relative paths.
+	* PBMakefileGenerator.m: Sort contents of the make file entries.
+
 2008-08-29 22:48-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBPbxNativeTarget.m: If the PRODUCT_NAME key isn't available then

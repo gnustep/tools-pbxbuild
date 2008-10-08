@@ -144,7 +144,7 @@ main(int argc, const char *argv[], char *env[])
       while ( (projectDirEntry = [f nextObject]) ) 
 	{
 	  NSString *source = 
-	    [projectDir stringByAppendingPathComponent: projectDirEntry];
+	    [@"../../"  stringByAppendingPathComponent: projectDirEntry];
 	  NSString *destination = 
 	    [targetDir stringByAppendingPathComponent: projectDirEntry];
 
@@ -155,6 +155,7 @@ main(int argc, const char *argv[], char *env[])
 	  NSDebugLog(@"Creating symbolic link from '%@' to '%@'", 
 		     source,
 		     destination);
+	  
 	  [fileManager createSymbolicLinkAtPath: destination
 	  	                    pathContent: source];
 	}

@@ -117,14 +117,14 @@
 	      tName, [target productVersion]];
 
   // Source files
-  [self      enumerate: [[target sources] 
+  [self      enumerate: [[[target sources] sortedArrayUsingSelector:@selector(compare:)] 
 			  pathsMatchingExtensions: 
 			    [NSArray arrayWithObject: @"m"]]
 	    InMakefile: makefile
 	withTargetName: tName
 	     andPrefix: @"OBJC_FILES"];
 
-  [self      enumerate: [[target sources] 
+  [self      enumerate: [[[target sources] sortedArrayUsingSelector:@selector(compare:)] 
 			  pathsMatchingExtensions: 
 			    [NSArray arrayWithObject: @"c"]]
 	    InMakefile: makefile
@@ -132,22 +132,22 @@
 	     andPrefix: @"C_FILES"];
   
   if ([type isEqual: @"bundle"] || [type isEqual: @"framework"])
-    [self       enumerate: [target headers]
+    [self       enumerate: [[target headers] sortedArrayUsingSelector:@selector(compare:)] 
 	       InMakefile: makefile
 	   withTargetName: tName
 	        andPrefix: @"HEADER_FILES"];
 
-  [self      enumerate: [target resources]
+  [self      enumerate: [[target resources] sortedArrayUsingSelector:@selector(compare:)]
 	    InMakefile: makefile
 	withTargetName: tName
 	     andPrefix: @"RESOURCE_FILES"];
 
-  [self      enumerate: [target localizedResources]
+  [self      enumerate: [[target localizedResources] sortedArrayUsingSelector:@selector(compare:)] 
 	    InMakefile: makefile
 	withTargetName: tName
 	     andPrefix: @"LOCALIZED_RESOURCE_FILES"];
 
-  [self      enumerate: [target languages]
+  [self      enumerate: [[[target languages] allObjects] sortedArrayUsingSelector:@selector(compare:)] 
 	    InMakefile: makefile
 	withTargetName: tName
 	     andPrefix: @"LANGUAGES"];
