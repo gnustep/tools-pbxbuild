@@ -152,12 +152,28 @@ main(int argc, const char *argv[], char *env[])
 	  if ([projectDirEntry hasPrefix: @"GNUmakefile"])
 	    continue;
 					       
-	  NSDebugLog(@"Creating symbolic link from '%@' to '%@'", 
-		     source,
-		     destination);
-	  
-	  [fileManager createSymbolicLinkAtPath: destination
-	  	                    pathContent: source];
+#ifdef __MINGW32__
+	  {
+	    NSString *source = 
+	      [projectDir stringByAppendingPathComponent: projectDirEntry];
+	    NSDebugLog(@"Copying from '%@' to '%@'", 
+		  source,
+		  destination);
+	    [fileManager copyPath: source
+			 toPath: destination
+			 handler: nil];
+	  }
+#else
+	  {
+	    NSString *source = 
+	      [@"../../"  stringByAppendingPathComponent: projectDirEntry];
+	    NSDebugLog(@"Creating symbolic link from '%@' to '%@'", 
+		       source,
+		       destination);
+	    [fileManager createSymbolicLinkAtPath: destination
+			 pathContent: source];
+	  }
+#endif
 	}
 
       // generate and write makefile

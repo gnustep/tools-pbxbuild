@@ -1,3 +1,7 @@
+2008-10-10 18:16-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* main.m: Fixes to make pbxbuild function properly on Windows.
+
 2008-10-08 00:08-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* main.m: Link using relative paths.
