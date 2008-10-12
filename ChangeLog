@@ -1,3 +1,9 @@
+2008-10-12 18:26-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m: Automatically generate library/framework
+	linking information.  Filter out well-known Apple specific libraries
+	and frameworks.
+
 2008-10-10 18:16-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* main.m: Fixes to make pbxbuild function properly on Windows.

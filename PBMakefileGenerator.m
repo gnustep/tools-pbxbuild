@@ -31,6 +31,13 @@
  */
 - (void) insertIncludeDirsForTarget: (PBPbxNativeTarget *)target
 			 inMakefile: (NSMutableString *)makefile;
+
+/**
+ * insert the List of framework and library entries for the compiler
+ */
+- (void) insertFrameworkEntriesForTarget: (PBPbxNativeTarget *)target
+			      inMakefile: (NSMutableString *)makefile;
+
 /**
  * generates sources, headers, resources, etc. section for
  * the given target
@@ -99,6 +106,60 @@
 	    @"\n\t(cd %@; ln -s %@/*.h .)",
 		    prefix, nonGroupDir];
 	}
+    }
+}
+
+- (void) insertFrameworkEntriesForTarget: (PBPbxNativeTarget *)target
+			      inMakefile: (NSMutableString *)makefile
+{
+  NSEnumerator *e = [[target frameworks] objectEnumerator];
+  NSString     *frameworkFullName = nil;
+    
+  if ([[target frameworks] count] == 0)
+    return;
+  
+  [makefile appendString: @"\n\n"]; 
+  while ( (frameworkFullName = [e nextObject]) )
+    {
+      NSString *framework = [frameworkFullName lastPathComponent];
+      NSString *name = nil;
+      NSString *nativeLib = nil;
+      NSString *ext = [framework pathExtension];
+      
+      if(framework == nil)
+	continue;
+
+      if([ext isEqual: @"framework"])
+	{
+	  name = [framework stringByDeletingPathExtension];
+	}
+      else if([ext isEqual: @"a"])
+	{
+	  name = [[framework stringByDeletingPathExtension] 
+		   stringByReplacingString: @"lib" withString: @""];
+	}
+
+      // Check for well known things that we already link or can't link...
+      if(name == nil)
+	{
+	  continue;
+	}      
+      else if([name isEqual: @"Cocoa"] ||
+	      [name isEqual: @"Carbon"] ||
+	      [name isEqual: @"IOKit"] ||
+	      [name isEqual: @"Quartz"] ||
+	      [name isEqual: @"QuickTime"] ||
+	      [name isEqual: @"SystemConfiguration"] ||
+	      [name isEqual: @"ApplicationServices"])
+	{
+	  // we already are linking parts of GNUstep equivalent to what's 
+	  // needed for the tooltype.  Also skip any other Apple specific
+	  // frameworks.
+	  continue; 
+	}
+
+      nativeLib = [NSString stringWithFormat: @"ADDITIONAL_NATIVE_LIBS+= %@\n",name];
+      [makefile appendString: nativeLib]; 
     }
 }
 
@@ -285,7 +346,8 @@
 
   [self insertIncludeDirsForTarget: target inMakefile: makefile];
 
-  [makefile appendString: @"\n\nADDITIONAL_NATIVE_LIBS+= util\n"];
+  [self insertFrameworkEntriesForTarget: target inMakefile: makefile];
+
   [makefile appendString: @"\n\nADDITIONAL_CPPFLAGS+= -DGNUSTEP\n"];
 
   [self linkDependenciesForTarget: target inMakefile: makefile];
