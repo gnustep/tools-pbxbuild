@@ -148,6 +148,7 @@
 	      [name isEqual: @"Carbon"] ||
 	      [name isEqual: @"IOKit"] ||
 	      [name isEqual: @"Quartz"] ||
+	      [name isEqual: @"QuartzCore"] ||
 	      [name isEqual: @"QuickTime"] ||
 	      [name isEqual: @"SystemConfiguration"] ||
 	      [name isEqual: @"ApplicationServices"])

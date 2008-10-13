@@ -1,3 +1,8 @@
+2008-10-12 21:46-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m: Add QuartzCore to the list of excluded 
+	libraries.
+
 2008-10-12 21:43-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* main.m
