@@ -1,3 +1,11 @@
+2008-10-12 21:43-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* main.m
+	* PBMakefileGenerator.m
+	* PBPbxNativeTarget.h
+	* PBPbxNativeTarget.m: Create source sections based on metadata in
+	the pbxproj file rather than by file extentions.
+
 2008-10-12 18:26-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: Automatically generate library/framework

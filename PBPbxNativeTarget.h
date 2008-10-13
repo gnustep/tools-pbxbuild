@@ -33,27 +33,27 @@
 
 @interface PBPbxNativeTarget : NSObject
 {
-  PBPbxProject       *project;
-  NSDictionary       *objects;
-
-  NSString           *targetKey;
-  NSString           *targetName;
-  NSString           *targetType;
-
-  NSString           *infoPlistFile;
-  NSDictionary       *infoPlist;
-  NSString           *productVersion;
-
-  NSMutableSet       *includeDirs;
-  NSMutableArray     *headers;
-  NSMutableSet       *headerNonGroupDirs;
-  NSMutableArray     *sources;
-  NSMutableSet       *languages;
-  NSMutableArray     *resources;
-  NSMutableArray     *localizedResources;
-  NSMutableArray     *frameworks;
-  NSMutableArray     *dependencyKeys;
-  NSMutableSet       *targetDependencies;
+  PBPbxProject        *project;
+  NSDictionary        *objects;
+  
+  NSString            *targetKey;
+  NSString            *targetName;
+  NSString            *targetType;
+  
+  NSString            *infoPlistFile;
+  NSDictionary        *infoPlist;
+  NSString            *productVersion;
+  
+  NSMutableSet        *includeDirs;
+  NSMutableArray      *headers;
+  NSMutableSet        *headerNonGroupDirs;
+  NSMutableDictionary *sources;
+  NSMutableSet        *languages;
+  NSMutableArray      *resources;
+  NSMutableArray      *localizedResources;
+  NSMutableArray      *frameworks;
+  NSMutableArray      *dependencyKeys;
+  NSMutableSet        *targetDependencies;
 }
 /**
  * <em>Designated Initializer</em>: Initializes this Class with
@@ -144,7 +144,7 @@
 /**
  * getter Method: returns an Array of [NSString]
  */
-- (NSMutableArray *) sources;
+- (NSMutableDictionary *) sources;
 
 /**
  * getter Method: returns an Array of [NSString]

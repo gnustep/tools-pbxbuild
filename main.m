@@ -23,6 +23,7 @@
 */
 
 #include "cmdline.h"
+#include <stdlib.h>
 
 #include <Foundation/Foundation.h>
 #include "PBMakefileGenerator.h"
@@ -211,10 +212,11 @@ main(int argc, const char *argv[], char *env[])
 
   // finally changedir to the pbxbuild directory and run make
   [fileManager changeCurrentDirectoryPath: @"pbxbuild"];
-  make = [[NSTask alloc] init];
-  [make setLaunchPath: @"make"];
-  [make setArguments: [NSArray arrayWithObjects: @"-k", nil]];
-  [make launch];
+  // make = [[NSTask alloc] init];
+  // [make setLaunchPath: @"make"];
+  // [make setArguments: [NSArray arrayWithObjects: @"-k", nil]];
+  // [make launch];
+  system("make -k");
 
   RELEASE(make);
   AUTORELEASE(project);

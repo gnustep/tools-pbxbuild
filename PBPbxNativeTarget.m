@@ -66,6 +66,18 @@
 - (BOOL) traverseBuildPhasesOfTarget: (NSDictionary *)target;
 
 /**
+ * Gets the type for the file.
+ */
+- (NSString *) lookupResourceTypeOfPbxBuildFileRef: (NSString *)fileRef;
+
+/**
+ * retrieves all the files belonging to source buildPhase and stores the
+ * into the dictionary.
+ */
+- (void) retrieveSourceFileListFromBuildPhase: (NSDictionary *)buildPhase
+			     andStoreResultIn: (NSMutableDictionary *)aDictionary;
+
+/**
  * retrieves all the files belonging to buildPhase and stores the
  * List of files in anArray
  */
@@ -182,21 +194,30 @@
   while ( (buildPhaseKey = [e nextObject]) )
     {
       NSString *buildPhaseType;
+
       // buildPhase is just a reference, so look it up
       buildPhase = [objects objectForKey: buildPhaseKey];
       buildPhaseType = [buildPhase objectForKey: @"isa"];
       if ([buildPhaseType isEqual: @"PBXHeadersBuildPhase"])
-	[self retrieveFileListFromBuildPhase: buildPhase 
-	                    andStoreResultIn: headers];
+	{
+	  [self retrieveFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: headers];
+	}
       else if ([buildPhaseType isEqual: @"PBXSourcesBuildPhase"])
-	[self retrieveFileListFromBuildPhase: buildPhase 
-	                    andStoreResultIn: sources];
+	{
+	  [self retrieveSourceFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: sources];
+	}
        else if ([buildPhaseType isEqual: @"PBXResourcesBuildPhase"])
- 	[self retrieveFileListFromBuildPhase: buildPhase 
- 	                    andStoreResultIn: resources];
+ 	{
+	  [self retrieveFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: resources];
+	}
       else if ([buildPhaseType isEqual: @"PBXFrameworksBuildPhase"])
-	[self retrieveFileListFromBuildPhase: buildPhase 
-	                    andStoreResultIn: frameworks];
+	{
+	  [self retrieveFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: frameworks];
+	}
       else
 	NSLog(@"Skipping Build Phase %@, not recognized yet", buildPhaseType);
     }
@@ -285,6 +306,124 @@
   return [defaultConfiguration objectForKey: @"buildSettings"];
 }
 
+
+- (NSString *) lookupResourceTypeOfPbxBuildFileRef: (NSString *)pbxFileRef
+{
+  NSDictionary *pbxBuildFile     = [objects objectForKey: pbxFileRef];
+  NSString     *fileRef          = [pbxBuildFile objectForKey: @"fileRef"];
+  NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
+  NSString *type = [pbxFileReference objectForKey: @"lastKnownFileType"];
+  
+  if(type == nil)
+    {
+      type = [pbxFileReference objectForKey: @"explicitFileType"];
+    }
+  
+  return type;
+}
+
+- (void) retrieveSourceFileListFromBuildPhase: (NSDictionary *)buildPhase
+			     andStoreResultIn: (NSMutableDictionary *)aDictionary
+{
+  NSArray      *files          = [buildPhase objectForKey: @"files"];
+  NSString     *buildPhaseType = [buildPhase objectForKey: @"isa"];
+  NSEnumerator *e              = [files objectEnumerator];
+  NSString     *pbxBuildFile;
+  NSMutableArray *cFiles, *mFiles, *cppFiles;
+
+  // File arrays...
+  cFiles = [NSMutableArray arrayWithCapacity: 50];
+  mFiles = [NSMutableArray arrayWithCapacity: 50];
+  cppFiles = [NSMutableArray arrayWithCapacity: 50];
+ 
+  // Add files...
+  NSDebugMLog(@"Adding files for buildPhase: %@", buildPhaseType);
+  while ( (pbxBuildFile = [e nextObject]) )
+    {
+      NSString *pbxFileReference = [[objects objectForKey: pbxBuildFile] 
+				     objectForKey: @"fileRef"];
+      NSString *path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
+      NSString *type = [self lookupResourceTypeOfPbxBuildFileRef: pbxBuildFile];
+      
+      NSDebugMLog(@"Looking up file handle: %@", pbxBuildFile);
+      if([type isEqual: @"sourcecode.c.c"])
+	{
+	  [self addPath: path 
+		withFileReferenceKey: pbxFileReference
+		toArray: cFiles
+		type: buildPhaseType];
+	}
+      else if([type isEqual: @"sourcecode.cpp.cpp"])
+	{
+	  [self addPath: path 
+		withFileReferenceKey: pbxFileReference
+		toArray: cppFiles
+		type: buildPhaseType];
+	}
+      else if([type isEqual: @"sourcecode.c.objc"])
+	{
+	  [self addPath: path 
+		withFileReferenceKey: pbxFileReference
+		toArray: mFiles
+		type: buildPhaseType];
+	}
+    }
+
+  // Add arrays to the dictionary...
+  [aDictionary setObject: cFiles forKey: @"c"];
+  [aDictionary setObject: mFiles forKey: @"m"];
+  [aDictionary setObject: cppFiles forKey: @"cpp"];
+}
+
+- (NSString *) lookupResourcesOfPbxBuildFileRef: (NSString *)pbxBuildFileRef;
+{
+  NSDictionary *pbxBuildFile     = [objects objectForKey: pbxBuildFileRef];
+  NSString     *fileRef          = [pbxBuildFile objectForKey: @"fileRef"];
+  NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
+
+  NSDebugMLog(@"Looking up file handle: %@", pbxBuildFileRef);
+  
+  // if the resource is localized we have a PBXVariantGroup instead of
+  // PBXFileReference
+  if ([[pbxFileReference objectForKey: @"isa"] 
+	isEqual: @"PBXVariantGroup"])
+    {
+      NSEnumerator *e = [[pbxFileReference objectForKey: @"children"] 
+			  objectEnumerator];
+      NSString     *fileRef;
+      NSString     *fileName = nil;
+
+      NSDebugMLog(@"Got PBXVariantGroup");
+
+      while ( (fileRef = [e nextObject]) )
+	{
+	  NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
+	  NSString     *path             = [pbxFileReference 
+					     objectForKey: @"path"];
+	  if (fileName != nil && 
+	      !([[path lastPathComponent] isEqual: fileName]) )
+	    NSLog(@"Warning: Got multiple file names for Resource: %@, %@", 
+		  [path lastPathComponent], fileName);
+
+	  fileName = [path lastPathComponent];
+
+	  // we are only interested in the Language
+	  // now it is in the form Korean.lproj/iTerm.strings
+	  path = [path stringByDeletingLastPathComponent];
+	  // Korean.lproj
+	  path = [path stringByDeletingPathExtension];
+	  // Korean
+	  [languages addObject: path];
+	}
+      NSDebugMLog(@"Finished processing localized Resource: %@", fileName);
+      NSDebugMLog(@"Available languages: %@", [languages description]);
+      [localizedResources addObject: fileName];
+	// return nil here, because we add the files to other arrays
+      return nil;
+    }
+  return [pbxFileReference objectForKey: @"path"];
+}
+
 - (void) retrieveFileListFromBuildPhase: (NSDictionary *)buildPhase
 		       andStoreResultIn: (NSMutableArray *)anArray
 {
@@ -341,55 +480,6 @@
 			   toArray: anArray
 			      type: buildPhaseType];
       }
-}
-
-- (NSString *) lookupResourcesOfPbxBuildFileRef: (NSString *)pbxBuildFileRef;
-{
-  NSDictionary *pbxBuildFile     = [objects objectForKey: pbxBuildFileRef];
-  NSString     *fileRef          = [pbxBuildFile objectForKey: @"fileRef"];
-  NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
-
-  NSDebugMLog(@"Looking up file handle: %@", pbxBuildFileRef);
-  
-  // if the resource is localized we have a PBXVariantGroup instead of
-  // PBXFileReference
-  if ([[pbxFileReference objectForKey: @"isa"] 
-	isEqual: @"PBXVariantGroup"])
-    {
-      NSEnumerator *e = [[pbxFileReference objectForKey: @"children"] 
-			  objectEnumerator];
-      NSString     *fileRef;
-      NSString     *fileName = nil;
-
-      NSDebugMLog(@"Got PBXVariantGroup");
-
-      while ( (fileRef = [e nextObject]) )
-	{
-	  NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
-	  NSString     *path             = [pbxFileReference 
-					     objectForKey: @"path"];
-	  if (fileName != nil && 
-	      !([[path lastPathComponent] isEqual: fileName]) )
-	    NSLog(@"Warning: Got multiple file names for Resource: %@, %@", 
-		  [path lastPathComponent], fileName);
-
-	  fileName = [path lastPathComponent];
-
-	  // we are only interested in the Language
-	  // now it is in the form Korean.lproj/iTerm.strings
-	  path = [path stringByDeletingLastPathComponent];
-	  // Korean.lproj
-	  path = [path stringByDeletingPathExtension];
-	  // Korean
-	  [languages addObject: path];
-	}
-      NSDebugMLog(@"Finished processing localized Resource: %@", fileName);
-      NSDebugMLog(@"Available languages: %@", [languages description]);
-      [localizedResources addObject: fileName];
-	// return nil here, because we add the files to other arrays
-      return nil;
-    }
-  return [pbxFileReference objectForKey: @"path"];
 }
 
 - (void)              addPath: (NSString *)path 
@@ -484,7 +574,7 @@
   ASSIGN(includeDirs,        [NSMutableSet     setWithCapacity: 5 ]);
   ASSIGN(headers,            [NSMutableArray arrayWithCapacity: 50]);
   ASSIGN(headerNonGroupDirs, [NSMutableSet     setWithCapacity: 5]);
-  ASSIGN(sources,            [NSMutableArray arrayWithCapacity: 50]);
+  ASSIGN(sources,            [NSMutableDictionary dictionary]);
   ASSIGN(resources,          [NSMutableArray arrayWithCapacity: 10]);
   ASSIGN(languages,          [NSMutableSet     setWithCapacity: 5 ]);
   ASSIGN(localizedResources, [NSMutableArray arrayWithCapacity: 5 ]);
@@ -609,7 +699,7 @@
   return AUTORELEASE(RETAIN(headerNonGroupDirs));
 }
 
-- (NSMutableArray *) sources
+- (NSMutableDictionary *) sources
 {
   return AUTORELEASE(RETAIN(sources));
 }

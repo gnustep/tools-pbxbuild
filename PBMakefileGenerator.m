@@ -168,50 +168,57 @@
 {
   NSString     *tName = [target targetNameReplacingSpaces];      
   NSString     *type  = [target targetType]; 
+  NSArray      *cFiles = [[[target sources] objectForKey: @"c"] sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *mFiles = [[[target sources] objectForKey: @"m"] sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] sortedArrayUsingSelector:@selector(compare:)];
 
   [makefile appendFormat: @"\n\n%@_NAME=%@", [type uppercaseString], tName];
-  
   [makefile appendFormat: @"\n\nVERSION=%@", [target productVersion]];
 
   if ([type isEqual: @"framework"])
     [makefile appendFormat: @"\n%@_CURRENT_VERSION_NAME = %@",
 	      tName, [target productVersion]];
 
-  // Source files
-  [self      enumerate: [[[target sources] sortedArrayUsingSelector:@selector(compare:)] 
-			  pathsMatchingExtensions: 
-			    [NSArray arrayWithObject: @"m"]]
-	    InMakefile: makefile
+  // Source files...
+  [self enumerate: mFiles
+	InMakefile: makefile
 	withTargetName: tName
-	     andPrefix: @"OBJC_FILES"];
-
-  [self      enumerate: [[[target sources] sortedArrayUsingSelector:@selector(compare:)] 
-			  pathsMatchingExtensions: 
-			    [NSArray arrayWithObject: @"c"]]
-	    InMakefile: makefile
-	withTargetName: tName
-	     andPrefix: @"C_FILES"];
+	andPrefix: @"OBJC_FILES"];
   
+  [self enumerate: cFiles
+	InMakefile: makefile
+	withTargetName: tName
+	andPrefix: @"C_FILES"];
+  
+  [self enumerate: cppFiles
+	InMakefile: makefile
+	withTargetName: tName
+	andPrefix: @"CPP_FILES"];
+  
+  // Header files...
   if ([type isEqual: @"bundle"] || [type isEqual: @"framework"])
-    [self       enumerate: [[target headers] sortedArrayUsingSelector:@selector(compare:)] 
-	       InMakefile: makefile
-	   withTargetName: tName
-	        andPrefix: @"HEADER_FILES"];
-
-  [self      enumerate: [[target resources] sortedArrayUsingSelector:@selector(compare:)]
+    {
+      [self enumerate: [[target headers] sortedArrayUsingSelector:@selector(compare:)] 
 	    InMakefile: makefile
+	    withTargetName: tName
+	    andPrefix: @"HEADER_FILES"];
+    }
+  
+  // Resource files...
+  [self enumerate: [[target resources] sortedArrayUsingSelector:@selector(compare:)]
+	InMakefile: makefile
 	withTargetName: tName
-	     andPrefix: @"RESOURCE_FILES"];
-
-  [self      enumerate: [[target localizedResources] sortedArrayUsingSelector:@selector(compare:)] 
-	    InMakefile: makefile
+	andPrefix: @"RESOURCE_FILES"];
+  
+  [self enumerate: [[target localizedResources] sortedArrayUsingSelector:@selector(compare:)] 
+	InMakefile: makefile
 	withTargetName: tName
-	     andPrefix: @"LOCALIZED_RESOURCE_FILES"];
-
-  [self      enumerate: [[[target languages] allObjects] sortedArrayUsingSelector:@selector(compare:)] 
-	    InMakefile: makefile
+	andPrefix: @"LOCALIZED_RESOURCE_FILES"];
+  
+  [self enumerate: [[[target languages] allObjects] sortedArrayUsingSelector:@selector(compare:)] 
+	InMakefile: makefile
 	withTargetName: tName
-	     andPrefix: @"LANGUAGES"];
+	andPrefix: @"LANGUAGES"];
 }
 
 - (void) enumerate: (NSObject *)collection
