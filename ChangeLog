@@ -1,3 +1,9 @@
+2008-10-16 02:02-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* GNUmakefile
+	* main.m
+	* PBMakefileGenerator.m: Added code to generate PC.project file.
+
 2008-10-12 21:46-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: Add QuartzCore to the list of excluded 

@@ -27,6 +27,7 @@
 
 #include <Foundation/Foundation.h>
 #include "PBMakefileGenerator.h"
+#include "PBProjectGenerator.h"
 #include "PBPbxProject.h"
 
 NSString *
@@ -45,14 +46,17 @@ main(int argc, const char *argv[], char *env[])
   NSString                   *projectDir;
   NSArray                    *projectDirEntries;
   NSString                   *projectMakefile;
+  NSString                   *projectFile;
   PBPbxNativeTarget          *target;
-  PBMakefileGenerator        *generator;
+  PBMakefileGenerator        *makefileGenerator;
+  PBProjectGenerator         *pcGenerator;
   struct gengetopt_args_info args_info;
   NSEnumerator               *e;
   NSFileManager              *fileManager;
   NSString                   *pbxbuildDir;
   NSTask                     *make;
-  // NSString                   *makefile;
+  NSString                   *makefile;
+  NSString                   *pcfile;
 
   CREATE_AUTORELEASE_POOL(pool);
   fileManager = [NSFileManager defaultManager];
@@ -104,7 +108,8 @@ main(int argc, const char *argv[], char *env[])
 
   // initialize project model an makefile generator
   project           = [[PBPbxProject alloc] initWithFile: projectFilename];
-  generator         = [[PBMakefileGenerator alloc] initWithProject: project];
+  makefileGenerator = [[PBMakefileGenerator alloc] initWithProject: project];
+  pcGenerator       = [[PBProjectGenerator alloc] initWithProject: project];
 
   // create (overwrite) pbxbuild directory for builds
   pbxbuildDir = [[fileManager currentDirectoryPath] 
@@ -118,12 +123,19 @@ main(int argc, const char *argv[], char *env[])
 
   [fileManager createDirectoryAtPath: pbxbuildDir attributes: nil];
 
-  // create project makefile
-  projectMakefile = [generator generateProjectMakefile];
+  // create project makefile and PC.project file.
+  projectMakefile = [makefileGenerator generateProjectMakefile];
   NSDebugLog(@"Project Makefile:\n%@\n", projectMakefile);
   [projectMakefile writeToFile: 
 		     [pbxbuildDir 
 		       stringByAppendingPathComponent: @"GNUmakefile"]
+		   atomically: YES];
+
+  projectFile = [pcGenerator generateProjectFile];
+  NSDebugLog(@"Project file:\n%@\n", projectFile);
+  [projectFile writeToFile: 
+		     [pbxbuildDir 
+		       stringByAppendingPathComponent: @"PC.project"]
 		   atomically: YES];
 
   // generate subprojects
@@ -178,13 +190,21 @@ main(int argc, const char *argv[], char *env[])
 	}
 
       // generate and write makefile
-      makefile = [generator generateMakefileForTarget: target];
+      makefile = [makefileGenerator generateMakefileForTarget: target];
       NSDebugLog(@"Makefile for target: '%@':%@\n", 
 		 [target targetName], 
 		 makefile );
       [makefile writeToFile: 
 		  [targetDir stringByAppendingPathComponent: @"GNUmakefile"]
 		atomically: YES];
+
+      pcfile = [pcGenerator generateProjectForTarget: target];
+      NSDebugLog(@"Project file for target: '%@':%@\n", 
+		 [target targetName], 
+		 makefile );
+      [pcfile writeToFile: 
+		[targetDir stringByAppendingPathComponent: @"PC.project"]
+	      atomically: YES];
       // create link to Info.plist file
 
       if ([target infoPlistFile] != nil)
@@ -205,7 +225,8 @@ main(int argc, const char *argv[], char *env[])
   if(args_info.generate_makefile_only_given) 
     {
       AUTORELEASE(project);
-      AUTORELEASE(generator);
+      AUTORELEASE(makefileGenerator);
+      AUTORELEASE(pcGenerator);
       RELEASE(pool);
       exit(EXIT_SUCCESS);
     }
@@ -218,9 +239,10 @@ main(int argc, const char *argv[], char *env[])
   // [make launch];
   system("make -k");
 
-  RELEASE(make);
+  // RELEASE(make);
   AUTORELEASE(project);
-  AUTORELEASE(generator);
+  AUTORELEASE(pcGenerator);
+  AUTORELEASE(makefileGenerator);
   RELEASE(pool);
   
   return EXIT_SUCCESS;

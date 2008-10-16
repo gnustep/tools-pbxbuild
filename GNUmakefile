@@ -31,6 +31,7 @@ Resources/Info-gnustep.plist
 pbxbuild_HEADER_FILES = \
 cmdline.h \
 PBMakefileGenerator.h \
+PBProjectGenerator.h \
 PBPbxProject.h \
 PBPbxNativeTarget.h \
 PBDevelopmentHelper.h \
@@ -41,6 +42,7 @@ PBPbxGroup.h
 #
 pbxbuild_OBJC_FILES = \
 PBMakefileGenerator.m \
+PBProjectGenerator.m \
 PBPbxProject.m \
 PBPbxNativeTarget.m \
 PBDevelopmentHelper.m \

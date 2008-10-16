@@ -333,8 +333,10 @@
   
   e = [[project targets] objectEnumerator];
   while ( (target = [e nextObject]) )
-    [makefile appendFormat: @"\\\n\t%@ ", 
-	      [self getSubprojectNameForTarget: target]];
+    {
+      [makefile appendFormat: @"\\\n\t%@ ", 
+		[self getSubprojectNameForTarget: target]];
+    }
 
   [makefile appendString: @"\n\ninclude $(GNUSTEP_MAKEFILES)/aggregate.make"];
 
@@ -361,17 +363,25 @@
   [self linkDependenciesForTarget: target inMakefile: makefile];
 
   if ([@"app" isEqual: targetType])
-    [makefile
-      appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/application.make"];
+    {
+      [makefile
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/application.make"];
+    }
   else if ([@"framework" isEqual: targetType])
+    {
       [makefile 
 	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/framework.make"];
+    }
   else if ([@"bundle" isEqual: targetType])
-    [makefile 
-      appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make"];
+    {
+      [makefile 
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make"];
+    }
   else if ([@"tool" isEqual: targetType])
-    [makefile 
-      appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make"];
+    {
+      [makefile 
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make"];
+    }
 
   return makefile;
 }
