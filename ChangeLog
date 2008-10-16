@@ -1,3 +1,9 @@
+2008-10-16 02:03-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBProjectGenerator.h
+	* PBProjectGenerator.m: Added class to handle generation of the
+	PC.project file.
+
 2008-10-16 02:02-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* GNUmakefile
