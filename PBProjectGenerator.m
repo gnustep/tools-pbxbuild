@@ -45,11 +45,6 @@
 - (void) generateStandardSectionsForTarget: (PBPbxNativeTarget *)target
 				 inProject: (NSMutableDictionary *)projectDictionary;
 
-/**
- * links in frameworks the target depends on
- */
-- (void) linkDependenciesForTarget: (PBPbxNativeTarget *)target 
-			 inProject: (NSMutableDictionary *)projectDictionary;
 @end
 
 @implementation PBProjectGenerator (Private)
@@ -142,29 +137,47 @@
   NSMutableArray *otherSources = [NSMutableArray array];
   NSArray      *cFiles = [[target sources] objectForKey: @"c"];
   NSArray      *mFiles = [[[target sources] objectForKey: @"m"] sortedArrayUsingSelector:@selector(compare:)];
-  NSArray      *resources = [[target resources] sortedArrayUsingSelector:@selector(compare:)];
+  NSMutableArray *resources = [[[target resources] sortedArrayUsingSelector:@selector(compare:)] mutableCopy];
   NSArray      *headers = [[target headers] sortedArrayUsingSelector:@selector(compare:)];
-  NSArray      *localizedResources = [[target localizedResources] sortedArrayUsingSelector:@selector(compare:)];
+  NSMutableArray *localizedResources = [[[target localizedResources] sortedArrayUsingSelector:@selector(compare:)] mutableCopy];
   NSArray      *languages = [[[target languages] allObjects] sortedArrayUsingSelector:@selector(compare:)];
   NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] sortedArrayUsingSelector:@selector(compare:)];
+  NSMutableArray *nibFiles = [NSMutableArray array];
+  NSEnumerator *e = [localizedResources objectEnumerator];
+  id           o = nil;
+  
+  // collect the nib files.
+  while((o = [e nextObject]) != nil)
+    {
+      if([[o pathExtension] isEqual: @"nib"])
+	{
+	  [nibFiles addObject: o];
+	}
+    }
 
+  [localizedResources removeObjectsInArray: nibFiles];
+  [resources removeObjectsInArray: nibFiles];
+  
   [projectDictionary setObject: tName 
-	   forKey: @"PROJECT_NAME"];
+		     forKey: @"PROJECT_NAME"];
 
-  [projectDictionary setObject: [target productVersion] 
-	   forKey: @"PROJECT_RELEASE"]; 
+  if([target productVersion] != nil)
+    {
+      [projectDictionary setObject: [target productVersion] 
+			 forKey: @"PROJECT_RELEASE"]; 
+    }
 
   [otherSources addObjectsFromArray: cFiles];
   [otherSources addObjectsFromArray: cppFiles];
 
   [projectDictionary setObject: mFiles
-	   forKey: @"CLASS_FILES"];
+		     forKey: @"CLASS_FILES"];
   
   [projectDictionary setObject: otherSources
-	   forKey: @"OTHER_SOURCES"];
+		     forKey: @"OTHER_SOURCES"];
 
   [projectDictionary setObject: @"$(GNUSTEP_MAKEFILES)"
-	   forKey: @"MAKEFILEDIR"];
+		     forKey: @"MAKEFILEDIR"];
 
   // Header files...
   if ([type isEqual: @"bundle"] || [type isEqual: @"framework"])
@@ -174,62 +187,18 @@
   
   // Resource files...
   [projectDictionary setObject: resources
-	   forKey: @"OTHER_RESOURCE"];
+		     forKey: @"OTHER_RESOURCE"];
   
   [projectDictionary setObject: localizedResources
-	   forKey: @"LOCALIZED_RESOURCES"];
+		     forKey: @"LOCALIZED_RESOURCES"];
+  
+  [projectDictionary setObject: nibFiles
+		     forKey:@"INTERFACES"];
   
   [projectDictionary setObject: languages
-	   forKey: @"USER_LANGUAGES"];
+		     forKey: @"USER_LANGUAGES"];
 }
 
-- (void) linkDependenciesForTarget: (PBPbxNativeTarget *)target 
-		      inProject: (NSMutableDictionary *)projectDictionary
-{
-  /*
-  NSEnumerator      *e                 = [[target targetDependencies] 
-					   objectEnumerator];
-  PBPbxNativeTarget *dependency;
-  NSMutableDictionary   *additionalLibDirs = [NSMutableDictionary dictionary];
-  NSString          *objcLibs          = [NSString string];
-
-  if ([[target targetDependencies] count] == 0)
-    return;
-
-  objcLibs = [objcLibs stringByAppendingFormat: @"%@_OBJC_LIBS+=",
-		       [target targetNameReplacingSpaces]];
-
-  [additionalLibDirs appendString: @"\nADDITIONAL_LIB_DIRS="];
-
-  while ( (dependency = [e nextObject]) )
-    {
-      if ([[dependency targetType] isEqual: @"framework"])
-	{
-	  // linking the lib
-	  objcLibs = [objcLibs stringByAppendingFormat: @" -l%@", 
-			       [dependency targetNameReplacingSpaces]];
-	  
-	  // adding the library dir
-	  // The path to the subproject
-	  NSString *libDir = [@".." stringByAppendingPathComponent:
-				[self getSubprojectNameForTarget: dependency]];
-	  // The path of the build product (The framework wrapper)
-	  libDir = [libDir stringByAppendingPathComponent: 
-			     [self getSubprojectNameForTarget: dependency]];
-	  libDir = [libDir stringByAppendingPathComponent: @"Versions"];
-	  libDir = [libDir stringByAppendingPathComponent: @"Current"];
-
-	  [additionalLibDirs appendFormat: @" -L%@", libDir];
-	}
-      else
-	NSLog(@"Warning: Don't know how to handle dependency with type '%@'",
-	      [dependency targetType]);
-    }
-
-  [project appendString: objcLibs];
-  [project appendString: additionalLibDirs];
-  */
-}
 @end
 
 
@@ -325,8 +294,6 @@
   [self insertIncludeDirsForTarget: target inProject: projectDictionary];
   
   [self insertFrameworkEntriesForTarget: target inProject: projectDictionary];
-  
-  [self linkDependenciesForTarget: target inProject: projectDictionary];
   
   return [projectDictionary description];
 }

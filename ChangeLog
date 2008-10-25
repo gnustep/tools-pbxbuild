@@ -1,3 +1,8 @@
+2008-10-24 21:44-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m: Remove warning.
+	* PBProjectGenerator.m: Fix issue adding nil to dictionary
+
 2008-10-16 02:03-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBProjectGenerator.h

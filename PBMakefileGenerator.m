@@ -277,9 +277,6 @@
 
 	  [additionalLibDirs appendFormat: @" -L%@", libDir];
 	}
-      else
-	NSLog(@"Warning: Don't know how to handle dependency with type '%@'",
-	      [dependency targetType]);
     }
 
   [makefile appendString: objcLibs];
