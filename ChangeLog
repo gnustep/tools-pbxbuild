@@ -1,3 +1,8 @@
+2008-10-26 21:00-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* main.m: Copy only those files needed for each target instead
+	of linking ALL of the files in each directory. 
+
 2008-10-24 21:44-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: Remove warning.

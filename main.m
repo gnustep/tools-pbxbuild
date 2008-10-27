@@ -142,7 +142,7 @@ main(int argc, const char *argv[], char *env[])
   e = [[project targets] objectEnumerator];
   while ( (target = [e nextObject]) )
     {
-      NSEnumerator *f = [projectDirEntries objectEnumerator];
+      NSEnumerator *f = nil;
       NSString   *projectDirEntry;
       NSString   *makefile;
       NSString   *newTName = [[target targetName] stringByReplacingString: @" "
@@ -151,42 +151,46 @@ main(int argc, const char *argv[], char *env[])
 	[pbxbuildDir stringByAppendingPathComponent:
 		       [newTName
 			 stringByAppendingPathExtension: [target targetType]]];
-      [fileManager createDirectoryAtPath: targetDir attributes: nil];
+      NSDictionary *sourceDict = [target sources];
+      NSMutableArray *sources = [NSMutableArray arrayWithCapacity: 50];
+      NSArray *headers = [target headers];
+
+      [sources addObjectsFromArray: [sourceDict objectForKey: @"m"]];
+      [sources addObjectsFromArray: [sourceDict objectForKey: @"c"]];
+      [sources addObjectsFromArray: [sourceDict objectForKey: @"cpp"]];
+      [sources addObjectsFromArray: headers];
+      f = [sources objectEnumerator];
+
+      [fileManager createDirectoryAtPath: targetDir 
+		   withIntermediateDirectories: YES
+		   attributes: nil
+		   error: NULL];
       
       // link all dir entries of the project directory into the target dir
       while ( (projectDirEntry = [f nextObject]) ) 
 	{
 	  NSString *source = 
-	    [@"../../"  stringByAppendingPathComponent: projectDirEntry];
+	    [projectDir stringByAppendingPathComponent: projectDirEntry];
 	  NSString *destination = 
 	    [targetDir stringByAppendingPathComponent: projectDirEntry];
+	  NSString *destDir = [destination stringByDeletingLastPathComponent];
+
+	  // Create any directories which might be in mentioned in the entry.
+	  [fileManager createDirectoryAtPath: destDir
+		       withIntermediateDirectories: YES
+		       attributes: nil
+		       error: NULL];
 
 	  // skip existing GNUmakefiles
 	  if ([projectDirEntry hasPrefix: @"GNUmakefile"])
 	    continue;
 					       
-#ifdef __MINGW32__
-	  {
-	    NSString *source = 
-	      [projectDir stringByAppendingPathComponent: projectDirEntry];
-	    NSDebugLog(@"Copying from '%@' to '%@'", 
-		  source,
-		  destination);
-	    [fileManager copyPath: source
-			 toPath: destination
-			 handler: nil];
-	  }
-#else
-	  {
-	    NSString *source = 
-	      [@"../../"  stringByAppendingPathComponent: projectDirEntry];
-	    NSDebugLog(@"Creating symbolic link from '%@' to '%@'", 
-		       source,
-		       destination);
-	    [fileManager createSymbolicLinkAtPath: destination
-			 pathContent: source];
-	  }
-#endif
+	  NSDebugLog(@"Copying from '%@' to '%@'", 
+		     source,
+		     destination);
+	  [fileManager copyPath: source
+		       toPath: destination
+		       handler: nil];
 	}
 
       // generate and write makefile
