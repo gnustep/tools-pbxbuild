@@ -188,9 +188,24 @@ main(int argc, const char *argv[], char *env[])
 	  NSDebugLog(@"Copying from '%@' to '%@'", 
 		     source,
 		     destination);
+
+#ifndef __MINGW32__
+	  if(args_info.symbolic_links_given)
+	    {
+	      [fileManager createSymbolicLinkAtPath: destination
+			   pathContent: source];
+	    }
+	  else
+	    {
+	      [fileManager copyPath: source
+			   toPath: destination
+			   handler: nil];
+	    }
+#else
 	  [fileManager copyPath: source
 		       toPath: destination
 		       handler: nil];
+#endif
 	}
 
       // generate and write makefile
