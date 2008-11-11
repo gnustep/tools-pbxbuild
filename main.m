@@ -54,8 +54,6 @@ main(int argc, const char *argv[], char *env[])
   NSEnumerator               *e;
   NSFileManager              *fileManager;
   NSString                   *pbxbuildDir;
-  NSTask                     *make;
-  NSString                   *makefile;
   NSString                   *pcfile;
 
   CREATE_AUTORELEASE_POOL(pool);
@@ -153,12 +151,26 @@ main(int argc, const char *argv[], char *env[])
 			 stringByAppendingPathExtension: [target targetType]]];
       NSDictionary *sourceDict = [target sources];
       NSMutableArray *sources = [NSMutableArray arrayWithCapacity: 50];
-      NSArray *headers = [target headers];
+      NSMutableArray *additionalHeaders = [NSMutableArray array];
+      NSArray *files = [fileManager directoryContentsAtPath: projectDir];
+
+      // iterate over all of the headers to copy them...
+      f = [files objectEnumerator];
+      while ((projectDirEntry = [f nextObject]) != nil)
+	{
+	  if([[projectDirEntry pathExtension] isEqual: @"h"])
+	    {
+	      [additionalHeaders addObject: projectDirEntry];
+	    }
+	}
 
       [sources addObjectsFromArray: [sourceDict objectForKey: @"m"]];
       [sources addObjectsFromArray: [sourceDict objectForKey: @"c"]];
       [sources addObjectsFromArray: [sourceDict objectForKey: @"cpp"]];
-      [sources addObjectsFromArray: headers];
+      [sources addObjectsFromArray: [target headers]];
+      [sources addObjectsFromArray: [target resources]];
+      [sources addObjectsFromArray: [target localizedResources]];
+      [sources addObjectsFromArray: additionalHeaders];
       f = [sources objectEnumerator];
 
       [fileManager createDirectoryAtPath: targetDir 
@@ -167,7 +179,7 @@ main(int argc, const char *argv[], char *env[])
 		   error: NULL];
       
       // link all dir entries of the project directory into the target dir
-      while ( (projectDirEntry = [f nextObject]) ) 
+      while ((projectDirEntry = [f nextObject]) != nil) 
 	{
 	  NSString *source = 
 	    [projectDir stringByAppendingPathComponent: projectDirEntry];
@@ -207,6 +219,8 @@ main(int argc, const char *argv[], char *env[])
 		       handler: nil];
 #endif
 	}
+
+
 
       // generate and write makefile
       makefile = [makefileGenerator generateMakefileForTarget: target];

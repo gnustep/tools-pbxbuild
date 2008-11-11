@@ -74,7 +74,7 @@
   while ( (includeDir = [e nextObject]) )
     [makefile appendFormat: @"\\\n\t-I%@", 
 	      [@"." stringByAppendingPathComponent: includeDir]];
-  
+
   //generate necessary dirs in obj
   [makefile appendString: @"\n\nbefore-all::"];
   e = [[target includeDirs] objectEnumerator];

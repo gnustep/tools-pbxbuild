@@ -1,3 +1,10 @@
+2008-11-10 19:14-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* main.m: Copy all headers since many xcode projects
+	don't include the headers in the project itself.  
+	Also copy the resources.
+	* PBMakefileGenerator.m: Minor cleanup
+
 2008-11-02 21:45-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* cmdline.c
