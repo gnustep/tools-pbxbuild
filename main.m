@@ -151,18 +151,6 @@ main(int argc, const char *argv[], char *env[])
 			 stringByAppendingPathExtension: [target targetType]]];
       NSDictionary *sourceDict = [target sources];
       NSMutableArray *sources = [NSMutableArray arrayWithCapacity: 50];
-      NSMutableArray *additionalHeaders = [NSMutableArray array];
-      NSArray *files = [fileManager directoryContentsAtPath: projectDir];
-
-      // iterate over all of the headers to copy them...
-      f = [files objectEnumerator];
-      while ((projectDirEntry = [f nextObject]) != nil)
-	{
-	  if([[projectDirEntry pathExtension] isEqual: @"h"])
-	    {
-	      [additionalHeaders addObject: projectDirEntry];
-	    }
-	}
 
       [sources addObjectsFromArray: [sourceDict objectForKey: @"m"]];
       [sources addObjectsFromArray: [sourceDict objectForKey: @"c"]];
@@ -170,7 +158,6 @@ main(int argc, const char *argv[], char *env[])
       [sources addObjectsFromArray: [target headers]];
       [sources addObjectsFromArray: [target resources]];
       [sources addObjectsFromArray: [target localizedResources]];
-      [sources addObjectsFromArray: additionalHeaders];
       f = [sources objectEnumerator];
 
       [fileManager createDirectoryAtPath: targetDir 
@@ -181,17 +168,50 @@ main(int argc, const char *argv[], char *env[])
       // link all dir entries of the project directory into the target dir
       while ((projectDirEntry = [f nextObject]) != nil) 
 	{
+	  NSEnumerator *h = nil;
 	  NSString *source = 
 	    [projectDir stringByAppendingPathComponent: projectDirEntry];
 	  NSString *destination = 
 	    [targetDir stringByAppendingPathComponent: projectDirEntry];
 	  NSString *destDir = [destination stringByDeletingLastPathComponent];
+	  NSString *srcDir = [source stringByDeletingLastPathComponent];
+	  NSArray *files = [fileManager directoryContentsAtPath: srcDir];
+	  NSString *file = nil;
 
 	  // Create any directories which might be in mentioned in the entry.
 	  [fileManager createDirectoryAtPath: destDir
 		       withIntermediateDirectories: YES
 		       attributes: nil
 		       error: NULL];
+
+	  // iterate over all of the headers to copy them...
+	  h = [files objectEnumerator];
+	  while ((file = [h nextObject]) != nil)
+	    {
+	      if([[file pathExtension] isEqual: @"h"])
+		{
+		  NSString *src = [srcDir stringByAppendingPathComponent: file];
+		  NSString *dst = [destDir stringByAppendingPathComponent: file];
+
+#ifndef __MINGW32__
+		  if(args_info.symbolic_links_given)
+		    {
+		      [fileManager createSymbolicLinkAtPath: dst
+				   pathContent: src];
+		    }
+		  else
+		    {
+		      [fileManager copyPath: src
+				   toPath: dst
+				   handler: nil];
+		    }
+#else
+		  [fileManager copyPath: src
+			       toPath: dst
+			       handler: nil];
+#endif
+		}
+	    }
 
 	  // skip existing GNUmakefiles
 	  if ([projectDirEntry hasPrefix: @"GNUmakefile"])
