@@ -33,15 +33,12 @@ struct gengetopt_args_info
   const char *generate_makefile_only_help; /* This only generates project makefiles without running make help description.  */
   int debug_flag;	/* Turn on debug logging (default=off).  */
   const char *debug_help; /* Turn on debug logging help description.  */
-  int symbolic_links_flag;	/* Generate the directory with symbolic links, this flag has no effect on operating systems that do not support symbolic links (default=off).  */
-  const char *symbolic_links_help; /* Generate the directory with symbolic links, this flag has no effect on operating systems that do not support symbolic links help description.  */
   
   int help_given ;	/* Whether help was given.  */
   int version_given ;	/* Whether version was given.  */
   int project_given ;	/* Whether project was given.  */
   int generate_makefile_only_given ;	/* Whether generate-makefile-only was given.  */
   int debug_given ;	/* Whether debug was given.  */
-  int symbolic_links_given ;	/* Whether symbolic-links was given.  */
 
 } ;
 

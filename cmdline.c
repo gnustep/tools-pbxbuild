@@ -31,7 +31,6 @@ const char *gengetopt_args_info_help[] = {
   "  -p, --project=STRING          The Project to build (.xcode, .xcodeproj)",
   "  -g, --generate-makefile-only  This only generates project makefiles without \n                                  running make  (default=off)",
   "  -d, --debug                   Turn on debug logging  (default=off)",
-  "  -s, --symbolic-links          Generate the directory with symbolic links, \n                                  this flag has no effect on operating systems \n                                  that do not support symbolic links  \n                                  (default=off)",
     0
 };
 
@@ -55,7 +54,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->project_given = 0 ;
   args_info->generate_makefile_only_given = 0 ;
   args_info->debug_given = 0 ;
-  args_info->symbolic_links_given = 0 ;
 }
 
 static
@@ -65,7 +63,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->project_orig = NULL;
   args_info->generate_makefile_only_flag = 0;
   args_info->debug_flag = 0;
-  args_info->symbolic_links_flag = 0;
   
 }
 
@@ -77,7 +74,6 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->project_help = gengetopt_args_info_help[2] ;
   args_info->generate_makefile_only_help = gengetopt_args_info_help[3] ;
   args_info->debug_help = gengetopt_args_info_help[4] ;
-  args_info->symbolic_links_help = gengetopt_args_info_help[5] ;
   
 }
 
@@ -159,9 +155,6 @@ cmdline_parser_file_save(const char *filename, struct gengetopt_args_info *args_
   }
   if (args_info->debug_given) {
     fprintf(outfile, "%s\n", "debug");
-  }
-  if (args_info->symbolic_links_given) {
-    fprintf(outfile, "%s\n", "symbolic-links");
   }
   
   fclose (outfile);
@@ -250,12 +243,11 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "project",	1, NULL, 'p' },
         { "generate-makefile-only",	0, NULL, 'g' },
         { "debug",	0, NULL, 'd' },
-        { "symbolic-links",	0, NULL, 's' },
         { NULL,	0, NULL, 0 }
       };
 
       stop_char = 0;
-      c = getopt_long (argc, argv, "hVp:gds", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVp:gd", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -313,19 +305,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           local_args_info.debug_given = 1;
           args_info->debug_given = 1;
           args_info->debug_flag = !(args_info->debug_flag);
-          break;
-
-        case 's':	/* Generate the directory with symbolic links, this flag has no effect on operating systems that do not support symbolic links.  */
-          if (local_args_info.symbolic_links_given)
-            {
-              fprintf (stderr, "%s: `--symbolic-links' (`-s') option given more than once%s\n", argv[0], (additional_error ? additional_error : ""));
-              goto failure;
-            }
-          if (args_info->symbolic_links_given && ! override)
-            continue;
-          local_args_info.symbolic_links_given = 1;
-          args_info->symbolic_links_given = 1;
-          args_info->symbolic_links_flag = !(args_info->symbolic_links_flag);
           break;
 
 

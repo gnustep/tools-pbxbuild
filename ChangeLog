@@ -1,3 +1,10 @@
+2008-11-23 18:28-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* cmdline.c
+	* cmdline.h
+	* main.m
+	* optionsparser.ggo: Revert changes to copy only what's needed.
+
 2008-11-12 01:49-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* main.m: Copy headers only from target directories.  
