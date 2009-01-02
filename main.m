@@ -81,8 +81,10 @@ main(int argc, const char *argv[], char *env[])
 
   if (args_info.debug_given)
     {
+      NSMutableSet *debugSet;
+
       [[NSProcessInfo processInfo] setDebugLoggingEnabled: YES];
-      NSMutableSet *debugSet = [[NSProcessInfo processInfo] debugSet];
+      debugSet = [[NSProcessInfo processInfo] debugSet];
       [debugSet addObject: @"dflt"];
     }
 

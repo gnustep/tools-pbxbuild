@@ -261,13 +261,14 @@
     {
       if ([[dependency targetType] isEqual: @"framework"])
 	{
+	  NSString *libDir;
 	  // linking the lib
 	  objcLibs = [objcLibs stringByAppendingFormat: @" -l%@", 
 			       [dependency targetNameReplacingSpaces]];
 	  
 	  // adding the library dir
 	  // The path to the subproject
-	  NSString *libDir = [@".." stringByAppendingPathComponent:
+	  libDir = [@".." stringByAppendingPathComponent:
 				[self getSubprojectNameForTarget: dependency]];
 	  // The path of the build product (The framework wrapper)
 	  libDir = [libDir stringByAppendingPathComponent: 

@@ -438,10 +438,13 @@
     {
       while ( (pbxBuildFile = [e nextObject]) )
 	 {
-	  NSDebugMLog(@"Looking up resource file handle: %@", pbxBuildFile);
-	  NSDictionary *ref     = [objects objectForKey: pbxBuildFile]; 
-	  NSString     *refType = [ref objectForKey: @"isa"];
+	  NSDictionary *ref; 
+	  NSString     *refType;
 	  NSString     *path;
+
+	  NSDebugMLog(@"Looking up resource file handle: %@", pbxBuildFile);
+	  ref     = [objects objectForKey: pbxBuildFile]; 
+	  refType = [ref objectForKey: @"isa"];
 
 	  if ([refType isEqual: @"PBXBuildFile"])
 	    {
@@ -469,12 +472,13 @@
   else
     while ( (pbxBuildFile = [e nextObject]) )
       {
+	NSString *path;
 	NSString *pbxFileReference = 
 	  [[objects objectForKey: pbxBuildFile] 
 	    objectForKey: @"fileRef"];
 
 	NSDebugMLog(@"Looking up file handle: %@", pbxBuildFile);
-	NSString *path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
+	path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
 	[self              addPath: path 
 	      withFileReferenceKey: pbxFileReference
 			   toArray: anArray

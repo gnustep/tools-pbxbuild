@@ -44,8 +44,9 @@
     e = [anObject objectEnumerator];
   while ( (key = [e nextObject]) )
     {
+      NSObject *o;
       NSLog([key description]);
-      NSObject *o = [aDictionary objectForKey: key];
+      o = [aDictionary objectForKey: key];
       NSLog([o description]);
     }
 }
