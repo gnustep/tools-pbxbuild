@@ -110,7 +110,11 @@
     return @"tool";
   if ([@"com.apple.product-type.bundle" isEqual: rawType])
     return @"bundle";
-
+  if ([@"com.apple.product-type.library-static" isEqual: rawType])
+    {
+      targetSubtype = @"static";
+      return @"library";
+    }
   return nil;
 }
 
@@ -666,6 +670,11 @@
 {
   return [targetName stringByReplacingString: @" " 
 		     withString: @"_"];
+}
+
+- (NSString *) targetSubtype
+{
+  return AUTORELEASE(RETAIN(targetSubtype));
 }
 
 - (NSString *) targetType

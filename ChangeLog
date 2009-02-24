@@ -1,3 +1,9 @@
+2009-02-23 21:19-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m
+	* PBPbxNativeTarget.h
+	* PBPbxNativeTarget.m: Changes to handle static libraries.
+
 2009-01-02 Riccardo Mottola <rmottola@users.sf.net>
 
 	* main.m

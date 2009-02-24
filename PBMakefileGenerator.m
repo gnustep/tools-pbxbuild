@@ -169,10 +169,14 @@
 {
   NSString     *tName = [target targetNameReplacingSpaces];      
   NSString     *type  = [target targetType]; 
-  NSArray      *cFiles = [[[target sources] objectForKey: @"c"] sortedArrayUsingSelector:@selector(compare:)];
-  NSArray      *mFiles = [[[target sources] objectForKey: @"m"] sortedArrayUsingSelector:@selector(compare:)];
-  NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *cFiles = [[[target sources] objectForKey: @"c"] 
+			   sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *mFiles = [[[target sources] objectForKey: @"m"] 
+			   sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] 
+			     sortedArrayUsingSelector:@selector(compare:)];
 
+  // Version and name...
   [makefile appendFormat: @"\n\n%@_NAME=%@", [type uppercaseString], tName];
   [makefile appendFormat: @"\n\nVERSION=%@", [target productVersion]];
 
@@ -197,7 +201,7 @@
 	andPrefix: @"CPP_FILES"];
   
   // Header files...
-  if ([type isEqual: @"bundle"] || [type isEqual: @"framework"])
+  if ([type isEqual: @"bundle"] || [type isEqual: @"framework"] || [type isEqual: @"library"])
     {
       [self enumerate: [[target headers] sortedArrayUsingSelector:@selector(compare:)] 
 	    InMakefile: makefile

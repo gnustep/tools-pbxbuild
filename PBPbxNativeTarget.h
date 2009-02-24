@@ -39,7 +39,8 @@
   NSString            *targetKey;
   NSString            *targetName;
   NSString            *targetType;
-  
+  NSString            *targetSubtype;
+
   NSString            *infoPlistFile;
   NSDictionary        *infoPlist;
   NSString            *productVersion;
@@ -110,6 +111,12 @@
  * (app, bundle, framework, tool, etc.)
  */
 - (NSString *) targetType;
+
+/**
+ * Returns the subtype of the given target.  Null if none
+ * is specified.
+ */
+- (NSString *) targetSubtype;
 
 /**
  * getter Method
