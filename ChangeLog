@@ -1,3 +1,8 @@
+2009-02-24 02:40-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBPbxNativeTarget.h
+	* PBPbxNativeTarget.m: Changes to support leapard style projects.
+
 2009-02-23 21:19-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m
@@ -7,8 +12,8 @@
 2009-01-02 Riccardo Mottola <rmottola@users.sf.net>
 
 	* main.m
-	* PBPbxNativeTarget.m, PBPbxProject.m, PBDevelopmentHelper.m, PBMakefileGenerator.m
-	Removed c-99isms
+	* PBPbxNativeTarget.m, PBPbxProject.m, PBDevelopmentHelper.m, 
+	PBMakefileGenerator.m: Removed c-99isms
 
 2008-11-12 01:49-EST Gregory John Casamento <greg_casamento@yahoo.com>
 

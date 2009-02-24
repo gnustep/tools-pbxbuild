@@ -28,6 +28,7 @@
 #include <Foundation/Foundation.h>
 @class PBPbxProject;
 
+#define PBX_VERSION_LEOPARD @"44"
 #define PBX_VERSION_TIGER @"42"
 #define PBX_VERSION_PANTHER @"39"
 

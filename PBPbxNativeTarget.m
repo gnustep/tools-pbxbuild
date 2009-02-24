@@ -155,6 +155,12 @@
       ASSIGN(targetType, [self standardizePantherTargetType: 
 				 [target objectForKey: @"isa"]]);
     }
+  else if([[project version] isEqual: PBX_VERSION_LEOPARD])
+    {
+      buildSettings = [target objectForKey: @"buildSettings"];
+      ASSIGN(targetType, [self standardizePantherTargetType: 
+				 [target objectForKey: @"isa"]]);
+    }
   else
     {
       NSLog(@"Unsupported project version: '%@', quitting...",[project version]);
@@ -174,14 +180,15 @@
       exit(EXIT_FAILURE);
     }
 
-  if([[project version] isEqual: PBX_VERSION_PANTHER]) 
+  if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
       infoPlistFile = nil;
       ASSIGN(infoPlist, [[target objectForKey: @"productSettingsXML"] 
 			  propertyList]);
       
     }
-  else if([[project version] isEqual: PBX_VERSION_TIGER])
+  else if([[project version] isEqual: PBX_VERSION_TIGER] ||
+	  [[project version] isEqual: PBX_VERSION_LEOPARD]) 
     {
       ASSIGN(infoPlistFile, [buildSettings objectForKey: @"INFOPLIST_FILE"]);
       ASSIGN(infoPlist, [NSDictionary 
