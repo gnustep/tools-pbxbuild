@@ -130,6 +130,24 @@
   return nil;
 }
 
+- (NSString *) standardizeLeopardTargetType: (NSString *)rawType
+{
+  if ([@"com.apple.product-type.application" isEqual: rawType])
+    return @"app";
+  if ([@"com.apple.product-type.framework" isEqual: rawType])
+    return @"framework";
+  if ([@"com.apple.product-type.tool" isEqual: rawType])
+    return @"tool";
+  if ([@"com.apple.product-type.bundle" isEqual: rawType])
+    return @"bundle";
+  if ([@"com.apple.product-type.library.static" isEqual: rawType])
+    {
+      targetSubtype = @"static";
+      return @"library";
+    }
+  return nil;
+}
+
 - (BOOL) traverseBuildPhasesOfTarget: (NSDictionary *)target
 {
   NSDictionary *buildSettings;
@@ -158,8 +176,8 @@
   else if([[project version] isEqual: PBX_VERSION_LEOPARD])
     {
       buildSettings = [target objectForKey: @"buildSettings"];
-      ASSIGN(targetType, [self standardizePantherTargetType: 
-				 [target objectForKey: @"isa"]]);
+      ASSIGN(targetType, [self standardizeLeopardTargetType: 
+				 [target objectForKey: @"productType"]]);
     }
   else
     {
@@ -665,12 +683,12 @@
 
 - (NSString *) targetKey
 {
-  return AUTORELEASE(RETAIN(targetKey));
+  return targetKey;
 }
 
 - (NSString *) targetName
 {
-  return AUTORELEASE(RETAIN(targetName));
+  return targetName;
 }
 
 - (NSString *) targetNameReplacingSpaces
@@ -681,72 +699,72 @@
 
 - (NSString *) targetSubtype
 {
-  return AUTORELEASE(RETAIN(targetSubtype));
+  return targetSubtype;
 }
 
 - (NSString *) targetType
 {
-  return AUTORELEASE(RETAIN(targetType));
+  return targetType;
 }
 
 - (NSString *) infoPlist
 {
-  return AUTORELEASE(RETAIN(infoPlist));
+  return infoPlist;
 }
 
 - (NSString *) infoPlistFile
 {
-  return AUTORELEASE(RETAIN(infoPlistFile));
+  return infoPlistFile;
 }
 
 - (NSString *) productVersion
 {
-  return AUTORELEASE(RETAIN(productVersion));
+  return productVersion;
 }
 
 - (NSMutableSet *) includeDirs
 {
-  return AUTORELEASE(RETAIN(includeDirs));
+  return includeDirs;
 }
 
 - (NSMutableArray *) headers
 {
-  return AUTORELEASE(RETAIN(headers));
+  return headers;
 }
 
 - (NSMutableSet *) headerNonGroupDirs;
 {
-  return AUTORELEASE(RETAIN(headerNonGroupDirs));
+  return headerNonGroupDirs;
 }
 
 - (NSMutableDictionary *) sources
 {
-  return AUTORELEASE(RETAIN(sources));
+  return sources;
 }
 
 - (NSMutableSet *) languages
 {
-  return AUTORELEASE(RETAIN(languages));
+  return languages;
 }
 
 - (NSMutableArray *) resources
 {
-  return AUTORELEASE(RETAIN(resources));
+  return resources;
 }
 
 - (NSMutableArray *) localizedResources
 {
-  return AUTORELEASE(RETAIN(localizedResources));
+  return localizedResources;
 }
 
 - (NSMutableArray *) frameworks
 {
-  return AUTORELEASE(RETAIN(frameworks));
+  return frameworks;
 }
 
 - (NSMutableSet *) targetDependencies
 {
-  return AUTORELEASE(RETAIN(targetDependencies));
+  return targetDependencies;
 }
 
 

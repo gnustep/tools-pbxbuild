@@ -1,3 +1,9 @@
+2009-02-24 16:27-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* main.m: Compile all static if one project is a static lib. 
+	* PBMakefileGenerator.m: Final changes to support static libraries.
+	* PBPbxNativeTarget.m: Removed unecessary autorelease/retain calls.
+
 2009-02-24 02:40-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBPbxNativeTarget.h

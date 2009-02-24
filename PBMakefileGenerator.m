@@ -175,10 +175,14 @@
 			   sortedArrayUsingSelector:@selector(compare:)];
   NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] 
 			     sortedArrayUsingSelector:@selector(compare:)];
+  NSString     *version = [target productVersion];
 
   // Version and name...
   [makefile appendFormat: @"\n\n%@_NAME=%@", [type uppercaseString], tName];
-  [makefile appendFormat: @"\n\nVERSION=%@", [target productVersion]];
+  if(version != nil)
+    {
+      [makefile appendFormat: @"\n\nVERSION=%@", version];
+    }
 
   if ([type isEqual: @"framework"])
     [makefile appendFormat: @"\n%@_CURRENT_VERSION_NAME = %@",
@@ -351,8 +355,6 @@
   NSMutableString   *makefile   = [NSMutableString string];
   NSString          *targetType = [target targetType];
 
-  [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/common.make\n\n"];
-
   [self generateStandardSectionsForTarget: target
 	inMakefile: makefile];      
 
@@ -383,6 +385,13 @@
     {
       [makefile 
 	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make"];
+    }
+
+  // add includes
+  [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/common.make\n\n"];
+  if([@"library" isEqual: targetType])
+    {
+      [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/library.make\n\n"];
     }
 
   return makefile;

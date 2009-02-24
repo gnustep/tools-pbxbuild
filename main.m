@@ -55,6 +55,7 @@ main(int argc, const char *argv[], char *env[])
   NSFileManager              *fileManager;
   NSString                   *pbxbuildDir;
   NSString                   *pcfile;
+  BOOL                       isstatic = NO;
 
   CREATE_AUTORELEASE_POOL(pool);
   fileManager = [NSFileManager defaultManager];
@@ -151,6 +152,13 @@ main(int argc, const char *argv[], char *env[])
 	[pbxbuildDir stringByAppendingPathComponent:
 		       [newTName
 			 stringByAppendingPathExtension: [target targetType]]];
+
+      // static?
+      if([[target targetSubtype] isEqual: @"static"])
+	{
+	  isstatic = YES;
+	}
+
       [fileManager createDirectoryAtPath: targetDir attributes: nil];
       
       // link all dir entries of the project directory into the target dir
@@ -231,11 +239,14 @@ main(int argc, const char *argv[], char *env[])
 
   // finally changedir to the pbxbuild directory and run make
   [fileManager changeCurrentDirectoryPath: @"pbxbuild"];
-  // make = [[NSTask alloc] init];
-  // [make setLaunchPath: @"make"];
-  // [make setArguments: [NSArray arrayWithObjects: @"-k", nil]];
-  // [make launch];
-  system("make -k");
+  if(isstatic)
+    {
+      system("make shared=no");
+    }
+  else
+    {
+      system("make -k");
+    }
 
   // RELEASE(make);
   AUTORELEASE(project);
