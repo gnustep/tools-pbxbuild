@@ -55,6 +55,7 @@
   NSMutableArray      *localizedResources;
   NSMutableArray      *frameworks;
   NSMutableArray      *dependencyKeys;
+  NSMutableDictionary *scripts;
   NSMutableSet        *targetDependencies;
 }
 /**
@@ -173,6 +174,11 @@
  * getter Method: returns an Array of [NSString]
  */
 - (NSMutableArray *) frameworks;
+
+/**
+ * getter Method: returns an Dictionary of [NSString]
+ */
+- (NSMutableDictionary *) scripts;
 
 /**
  * getter Method: returns an Array of [PBPbxNativeTarget]

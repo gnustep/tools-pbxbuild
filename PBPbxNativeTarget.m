@@ -31,15 +31,7 @@
  * rawType is transformed into a GNUmakefile compliant string
  * e.g. com.apple.product-type.application -> app
  */
-
-- (NSString *) standardizeTigerTargetType: (NSString *)rawType;
-
-/**
- * the targets isa field is transformed to a standard target type
- * e.g. PBXApplicationTarget -> app
- */
-
-- (NSString *) standardizePantherTargetType: (NSString *)targetIsa;
+- (NSString *) standardizeTargetType: (NSString *)rawType;
 
 /**
  * This sets up the paths where the compiler should search 
@@ -83,6 +75,14 @@
  */
 - (void) retrieveFileListFromBuildPhase: (NSDictionary *)buildPhase
 		       andStoreResultIn: (NSMutableArray *)anArray;
+
+/**
+ * retrieves all the files belonging to source buildPhase and stores the
+ * into the dictionary.
+ */
+- (void) retrieveShellCommandsFromBuildPhase: (NSDictionary *)buildPhase
+			    andStoreResultIn: (NSMutableDictionary *)aDictionary;
+
 /**
  * looks up the path from the file handle in the PBX*BuildPhase
  * and stores the file references
@@ -100,37 +100,7 @@
 @end
 
 @implementation PBPbxNativeTarget (Private)
-- (NSString *) standardizeTigerTargetType: (NSString *)rawType
-{
-  if ([@"com.apple.product-type.application" isEqual: rawType])
-    return @"app";
-  if ([@"com.apple.product-type.framework" isEqual: rawType])
-    return @"framework";
-  if ([@"com.apple.product-type.tool" isEqual: rawType])
-    return @"tool";
-  if ([@"com.apple.product-type.bundle" isEqual: rawType])
-    return @"bundle";
-  if ([@"com.apple.product-type.library.static" isEqual: rawType])
-    {
-      targetSubtype = @"static";
-      return @"library";
-    }
-  return nil;
-}
-
-- (NSString *) standardizePantherTargetType: (NSString *)targetIsa
-{
-  if([@"PBXApplicationTarget" isEqual: targetIsa])
-    return @"app";
-  if([@"PBXBundleTarget" isEqual: targetIsa])
-    return @"bundle";
-  if([@"PBXFrameworkTarget" isEqual: targetIsa])
-    return @"framework";
-
-  return nil;
-}
-
-- (NSString *) standardizeLeopardTargetType: (NSString *)rawType
+- (NSString *) standardizeTargetType: (NSString *)rawType
 {
   if ([@"com.apple.product-type.application" isEqual: rawType])
     return @"app";
@@ -164,19 +134,19 @@
           return NO; 
         }      
       buildSettings = [self getBuildSettingsTigerForTarget: target];    
-      ASSIGN(targetType, [self standardizeTigerTargetType: 
+      ASSIGN(targetType, [self standardizeTargetType: 
                                  [target objectForKey: @"productType"]]);
     }
   else if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
       buildSettings = [target objectForKey: @"buildSettings"];
-      ASSIGN(targetType, [self standardizePantherTargetType: 
-				 [target objectForKey: @"isa"]]);
+      ASSIGN(targetType, [self standardizeTargetType: 
+				 [target objectForKey: @"productType"]]);
     }
   else if([[project version] isEqual: PBX_VERSION_LEOPARD])
     {
       buildSettings = [target objectForKey: @"buildSettings"];
-      ASSIGN(targetType, [self standardizeLeopardTargetType: 
+      ASSIGN(targetType, [self standardizeTargetType: 
 				 [target objectForKey: @"productType"]]);
     }
   else
@@ -251,8 +221,11 @@
 	  [self retrieveFileListFromBuildPhase: buildPhase 
 		andStoreResultIn: frameworks];
 	}
-      else
-	NSLog(@"Skipping Build Phase %@, not recognized yet", buildPhaseType);
+      else if ([buildPhaseType isEqual: @"PBXShellScriptBuildPhase"])
+	{
+	  [self retrieveShellCommandsFromBuildPhase: buildPhase
+		andStoreResultIn: scripts];
+	}
     }
   return YES;
 }
@@ -355,6 +328,16 @@
   return type;
 }
 
+- (void) retrieveShellCommandsFromBuildPhase: (NSDictionary *)buildPhase
+			    andStoreResultIn: (NSMutableDictionary *)aDictionary
+{
+  NSString *script = [buildPhase objectForKey: @"shellScript"];  
+  NSString *name = [buildPhase objectForKey: @"name"];
+
+  // add script...
+  [aDictionary setObject: script forKey: name];
+}
+
 - (void) retrieveSourceFileListFromBuildPhase: (NSDictionary *)buildPhase
 			     andStoreResultIn: (NSMutableDictionary *)aDictionary
 {
@@ -362,12 +345,13 @@
   NSString     *buildPhaseType = [buildPhase objectForKey: @"isa"];
   NSEnumerator *e              = [files objectEnumerator];
   NSString     *pbxBuildFile;
-  NSMutableArray *cFiles, *mFiles, *cppFiles;
+  NSMutableArray *cFiles, *mFiles, *cppFiles, *mmFiles;
 
   // File arrays...
   cFiles = [NSMutableArray arrayWithCapacity: 50];
   mFiles = [NSMutableArray arrayWithCapacity: 50];
   cppFiles = [NSMutableArray arrayWithCapacity: 50];
+  mmFiles = [NSMutableArray arrayWithCapacity: 50];
  
   // Add files...
   NSDebugMLog(@"Adding files for buildPhase: %@", buildPhaseType);
@@ -400,12 +384,20 @@
 		toArray: mFiles
 		type: buildPhaseType];
 	}
+      else if([type isEqual: @"sourcecode.cpp.objcpp"])
+	{
+	  [self addPath: path 
+		withFileReferenceKey: pbxFileReference
+		toArray: mmFiles
+		type: buildPhaseType];
+	}
     }
 
   // Add arrays to the dictionary...
   [aDictionary setObject: cFiles forKey: @"c"];
   [aDictionary setObject: mFiles forKey: @"m"];
   [aDictionary setObject: cppFiles forKey: @"cpp"];
+  [aDictionary setObject: mmFiles forKey: @"mm"];
 }
 
 - (NSString *) lookupResourcesOfPbxBuildFileRef: (NSString *)pbxBuildFileRef;
@@ -616,7 +608,8 @@
   ASSIGN(languages,          [NSMutableSet     setWithCapacity: 5 ]);
   ASSIGN(localizedResources, [NSMutableArray arrayWithCapacity: 5 ]);
   ASSIGN(frameworks,         [NSMutableArray arrayWithCapacity: 5 ]);
-  ASSIGN(targetDependencies,       [NSMutableArray arrayWithCapacity: 5 ]);
+  ASSIGN(targetDependencies, [NSMutableArray arrayWithCapacity: 5 ]);
+  ASSIGN(scripts,            [NSMutableDictionary dictionary]);
 
   // set up include dirs  
   [self setUpIncludeDirsForTarget: atarget];
@@ -764,6 +757,11 @@
 - (NSMutableArray *) frameworks
 {
   return frameworks;
+}
+
+- (NSMutableDictionary *) scripts
+{
+  return scripts;
 }
 
 - (NSMutableSet *) targetDependencies

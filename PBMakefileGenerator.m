@@ -39,6 +39,12 @@
 			      inMakefile: (NSMutableString *)makefile;
 
 /**
+ * insert the shell scripts into before-all::
+ */
+- (void) insertShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
+				inMakefile: (NSMutableString *)makefile;
+
+/**
  * generates sources, headers, resources, etc. section for
  * the given target
  */
@@ -79,9 +85,12 @@
   [makefile appendString: @"\n\nbefore-all::"];
   e = [[target includeDirs] objectEnumerator];
   while ( (includeDir = [e nextObject]) )
-    [makefile appendFormat: 
-		@"\n\tmkdir -p ./obj/%@", 
-	      includeDir];  
+    {
+      [makefile appendFormat: 
+		  @"\n\tmkdir -p ./obj/%@", 
+		includeDir];
+    }
+  
   // if the target is a framework, make the header directories
   if ([[target targetType] isEqual: @"framework"])
     {
@@ -164,6 +173,23 @@
     }
 }
 
+- (void) insertShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
+				inMakefile: (NSMutableString *)makefile
+{
+  NSEnumerator *e = [[target scripts] objectEnumerator];
+  NSString *script = nil;
+
+  if ([[target scripts] count] == 0)
+    return;
+  
+  while ( (script = [e nextObject]) )
+    {
+      if(script == nil)
+	continue;
+      [makefile appendString: script]; 
+    }
+}
+
 - (void) generateStandardSectionsForTarget: (PBPbxNativeTarget *)target
 			        inMakefile: (NSMutableString *)makefile
 {
@@ -175,6 +201,8 @@
 			   sortedArrayUsingSelector:@selector(compare:)];
   NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] 
 			     sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *mmFiles = [[[target sources] objectForKey: @"mm"] 
+			    sortedArrayUsingSelector:@selector(compare:)];
   NSString     *version = [target productVersion];
 
   // Version and name...
@@ -193,6 +221,11 @@
 	InMakefile: makefile
 	withTargetName: tName
 	andPrefix: @"OBJC_FILES"];
+  
+  [self enumerate: mmFiles
+	InMakefile: makefile
+	withTargetName: tName
+	andPrefix: @"OBJCC_FILES"];
   
   [self enumerate: cFiles
 	InMakefile: makefile
@@ -393,6 +426,8 @@
     {
       [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/library.make\n\n"];
     }
+
+  [self insertShellScriptEntriesForTarget: target inMakefile: makefile];
 
   return makefile;
 }
