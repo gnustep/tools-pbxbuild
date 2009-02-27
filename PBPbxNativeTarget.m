@@ -110,7 +110,7 @@
     return @"tool";
   if ([@"com.apple.product-type.bundle" isEqual: rawType])
     return @"bundle";
-  if ([@"com.apple.product-type.library-static" isEqual: rawType])
+  if ([@"com.apple.product-type.library.static" isEqual: rawType])
     {
       targetSubtype = @"static";
       return @"library";
@@ -214,7 +214,11 @@
     }
   
   ASSIGN(productVersion, [infoPlist objectForKey: @"CFBundleVersion"]);
-
+  if(productVersion == nil)
+    {
+      productVersion = @"0";
+    }
+  
   // this one will be symlinked to the real Info.plist file
   [resources addObject: @"Info-gnustep.plist"];
 

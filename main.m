@@ -248,7 +248,6 @@ main(int argc, const char *argv[], char *env[])
       system("make -k");
     }
 
-  // RELEASE(make);
   AUTORELEASE(project);
   AUTORELEASE(pcGenerator);
   AUTORELEASE(makefileGenerator);

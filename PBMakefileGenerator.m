@@ -334,7 +334,7 @@
   // if not a simple project, create an aggregate project
 
   makefile = [NSMutableString string];
-  [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/common.make\n\n"];
+  [makefile appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/common.make\n\n"];
   [makefile appendString: @"SUBPROJECTS = "];
   
   e = [[project targets] objectEnumerator];
@@ -369,22 +369,22 @@
   if ([@"app" isEqual: targetType])
     {
       [makefile
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/application.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/application.make\n"];
     }
   else if ([@"framework" isEqual: targetType])
     {
       [makefile 
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/framework.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/framework.make\n"];
     }
   else if ([@"bundle" isEqual: targetType])
     {
       [makefile 
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make\n"];
     }
   else if ([@"tool" isEqual: targetType])
     {
       [makefile 
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make\n"];
     }
 
   // add includes
