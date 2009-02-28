@@ -1,9 +1,9 @@
 /*
    Project: pbxbuild
 
-   Copyright (C) 2006 Free Software Foundation
+   Copyright (C) 2006, 2009 Free Software Foundation
 
-   Author: Hans Baier,,,
+   Author: Hans Baier, Gregory Casamento
 
    Created: 2006-08-09 13:27:20 +0200 by jack
 

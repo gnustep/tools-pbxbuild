@@ -332,7 +332,7 @@
 			    andStoreResultIn: (NSMutableDictionary *)aDictionary
 {
   NSString *script = [buildPhase objectForKey: @"shellScript"];  
-  NSString *name = [buildPhase objectForKey: @"name"];
+  NSString *name = [NSString stringWithFormat: @"script_%d.sh",[script hash]];
 
   // add script...
   [aDictionary setObject: script forKey: name];

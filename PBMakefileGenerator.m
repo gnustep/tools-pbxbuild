@@ -1,9 +1,9 @@
 /*
    Project: pbxbuild
 
-   Copyright (C) 2006 Free Software Foundation
+   Copyright (C) 2006, 2009 Free Software Foundation
 
-   Author: Hans Baier,,,
+   Author: Hans Baier, Gregory Casamento
 
    Created: 2006-08-09 13:27:20 +0200 by jack
 
@@ -23,6 +23,7 @@
 */
 
 #include "PBMakefileGenerator.h"
+#include <Foundation/NSFileManager.h>
 
 @interface PBMakefileGenerator (Private)
 
@@ -41,8 +42,8 @@
 /**
  * insert the shell scripts into before-all::
  */
-- (void) insertShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
-				inMakefile: (NSMutableString *)makefile;
+- (void) createShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
+                                inMakefile: (NSMutableString *)makefile;
 
 /**
  * generates sources, headers, resources, etc. section for
@@ -90,7 +91,12 @@
 		  @"\n\tmkdir -p ./obj/%@", 
 		includeDir];
     }
-  
+
+  // add scripts to be executed..
+  [makefile appendString: @"\n"];
+  [self createShellScriptEntriesForTarget: target 
+	inMakefile: makefile];
+
   // if the target is a framework, make the header directories
   if ([[target targetType] isEqual: @"framework"])
     {
@@ -153,12 +159,12 @@
 	{
 	  continue;
 	}      
-      else if([name isEqual: @"Cocoa"] ||
-	      [name isEqual: @"Carbon"] ||
-	      [name isEqual: @"IOKit"] ||
-	      [name isEqual: @"Quartz"] ||
-	      [name isEqual: @"QuartzCore"] ||
-	      [name isEqual: @"QuickTime"] ||
+      else if([name isEqual: @"Cocoa"] || // covered by gnustep-gui and gnustep-base
+	      [name isEqual: @"Carbon"] || // not available...
+	      [name isEqual: @"IOKit"] || // not available...
+	      [name isEqual: @"Quartz"] || // not available... 
+	      [name isEqual: @"QuartzCore"] || // not available...
+	      [name isEqual: @"QuickTime"] || // not available...
 	      [name isEqual: @"SystemConfiguration"] ||
 	      [name isEqual: @"ApplicationServices"])
 	{
@@ -173,20 +179,41 @@
     }
 }
 
-- (void) insertShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
+- (void) createShellScriptEntriesForTarget: (PBPbxNativeTarget *)target 
 				inMakefile: (NSMutableString *)makefile
 {
-  NSEnumerator *e = [[target scripts] objectEnumerator];
+  NSEnumerator *e = [[target scripts] keyEnumerator];
+  NSString *key = nil;
   NSString *script = nil;
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSString *currentPath = [fm currentDirectoryPath];
+  NSString *scriptsDir = [[currentPath stringByAppendingPathComponent: @"pbxbuild"]
+			   stringByAppendingPathComponent: @"scripts"];
 
   if ([[target scripts] count] == 0)
     return;
+
+  // create scripts directory...
+  [fm createDirectoryAtPath: scriptsDir 
+      attributes: nil];
   
-  while ( (script = [e nextObject]) )
+  while ((key = [e nextObject]))
     {
+      NSString *scriptPath = [scriptsDir stringByAppendingPathComponent: key];
+
+      script = [[target scripts] objectForKey: key];
       if(script == nil)
-	continue;
-      [makefile appendString: script]; 
+	{
+	  continue;
+	}
+      
+      // script...
+      [script writeToFile: scriptPath
+	      atomically: YES];
+      
+      // add it to the makefile...
+      [makefile appendString: [NSString stringWithFormat: @"\tsh %@\n",
+					scriptPath]]; 
     }
 }
 
@@ -426,8 +453,6 @@
     {
       [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/library.make\n\n"];
     }
-
-  [self insertShellScriptEntriesForTarget: target inMakefile: makefile];
 
   return makefile;
 }

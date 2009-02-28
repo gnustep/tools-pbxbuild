@@ -1,3 +1,10 @@
+2009-02-28 00:46-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m: Create scripts in scripts directory under
+	pbxbuild so that they can be executed from there.
+	* PBPbxNativeTarget.m: Change to dictionary.
+	* PBProjectGenerator.m: Cleanup.
+
 2009-02-27 10:32-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: add scripts to before-all::
