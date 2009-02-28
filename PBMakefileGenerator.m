@@ -200,19 +200,25 @@
   while ((key = [e nextObject]))
     {
       NSString *scriptPath = [scriptsDir stringByAppendingPathComponent: key];
-
-      script = [[target scripts] objectForKey: key];
+      NSString *scriptPreamble = @"# Pbxbuild - Script preamble\nBUILT_PRODUCTS_DIR=.\nSRCROOT=.\nACTION=build\nTARGET_BUILD_DIR=.\nUNLOCALIZED_RESOURCES_FOLDER_PATH=./Resources\nDERIVED_FILE_DIR=./DerivedSources\n# End preamble\n";
+      
+      script = [scriptPreamble stringByAppendingString: 
+				 [[target scripts] objectForKey: key]];
       if(script == nil)
 	{
 	  continue;
 	}
+
+      // replace ditto command and other mac os x specific commands
+      // with equivalents...
+      script = [script stringByReplacingString: @"ditto" withString: @"cp -pr"];
       
       // script...
       [script writeToFile: scriptPath
 	      atomically: YES];
       
       // add it to the makefile...
-      [makefile appendString: [NSString stringWithFormat: @"\tsh %@\n",
+      [makefile appendString: [NSString stringWithFormat: @"\t-sh %@\n",
 					scriptPath]]; 
     }
 }
