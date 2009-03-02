@@ -1,3 +1,7 @@
+2009-03-02 02:23-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m: Move include for common.make.
+
 2009-02-28 00:46-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: Create scripts in scripts directory under
