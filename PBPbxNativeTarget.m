@@ -115,6 +115,16 @@
       targetSubtype = @"static";
       return @"library";
     }
+
+  if ([@"PBXApplicationTarget" isEqual: rawType])
+    return @"app";
+  if ([@"PBXFrameworkTarget" isEqual: rawType])
+    return @"framework";
+  if ([@"PBXToolTarget" isEqual: rawType])
+    return @"tool";
+  if ([@"PBXBundleTarget" isEqual: rawType])
+    return @"bundle";
+
   return nil;
 }
 
@@ -127,15 +137,9 @@
 
   if([[project version] isEqual: PBX_VERSION_TIGER]) 
     {
-      if(![[target objectForKey: @"isa"] isEqual: @"PBXNativeTarget"])
-        {
-          NSLog(@"Don't know how to handle target with type: %@, skipping...",
-                [target objectForKey: @"isa"] );
-          return NO; 
-        }      
       buildSettings = [self getBuildSettingsTigerForTarget: target];    
       ASSIGN(targetType, [self standardizeTargetType: 
-                                 [target objectForKey: @"productType"]]);
+                                 [target objectForKey: @"isa"]]);
     }
   else if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
@@ -163,9 +167,11 @@
 
   if(targetType == nil)
     {
-      NSLog(@"Don't know how to handle target type: '%@', quitting...", 
-	    [target objectForKey: @"productType"]);
-      exit(EXIT_FAILURE);
+      NSString *type = ([target objectForKey: @"productType"] != nil)?
+	[target objectForKey: @"productType"]:[target objectForKey: @"isa"];
+
+      NSLog(@"Don't know how to handle target type: '%@', skipping...", type);
+      return NO;
     }
 
   if([[project version] isEqual: PBX_VERSION_PANTHER])
@@ -205,6 +211,9 @@
 	{
 	  [self retrieveFileListFromBuildPhase: buildPhase 
 		andStoreResultIn: headers];
+
+	  [self retrieveSourceFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: sources];
 	}
       else if ([buildPhaseType isEqual: @"PBXSourcesBuildPhase"])
 	{
@@ -393,7 +402,24 @@
 	}
     }
 
-  // Add arrays to the dictionary...
+  // Add arrays to the dictionary, if they're not empty...
+  if([aDictionary objectForKey: @"c"] != nil)
+    {
+      [cFiles addObjectsFromArray: [aDictionary objectForKey: @"c"]];
+    }
+  if([aDictionary objectForKey: @"m"] != nil)
+    {
+      [mFiles addObjectsFromArray: [aDictionary objectForKey: @"m"]];
+    }
+  if([aDictionary objectForKey: @"cpp"] != nil)
+    {
+      [cppFiles addObjectsFromArray: [aDictionary objectForKey: @"cpp"]];
+    }
+  if([aDictionary objectForKey: @"mm"] != nil)
+    {
+      [mmFiles addObjectsFromArray: [aDictionary objectForKey: @"mm"]];
+    }
+
   [aDictionary setObject: cFiles forKey: @"c"];
   [aDictionary setObject: mFiles forKey: @"m"];
   [aDictionary setObject: cppFiles forKey: @"cpp"];

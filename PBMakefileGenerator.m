@@ -239,7 +239,14 @@
   NSString     *version = [target productVersion];
 
   // Version and name...
-  [makefile appendFormat: @"\n\n%@_NAME=%@", [type uppercaseString], tName];
+  if([type isEqual: @"tool"])
+    {
+      tName = [tName stringByAppendingString: @"_tool"];
+    }
+
+  [makefile appendFormat: @"\n\n%@_NAME=%@", 
+	    [type uppercaseString], tName];
+
   if(version != nil)
     {
       [makefile appendFormat: @"\n\nVERSION=%@", version];
@@ -268,7 +275,7 @@
   [self enumerate: cppFiles
 	InMakefile: makefile
 	withTargetName: tName
-	andPrefix: @"CPP_FILES"];
+	andPrefix: @"CC_FILES"];
   
   // Header files...
   if ([type isEqual: @"bundle"] || [type isEqual: @"framework"] || [type isEqual: @"library"])

@@ -1,3 +1,9 @@
+2009-03-06 22:01-EST Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBMakefileGenerator.m: Correct C++ compilation issue.
+	* PBPbxNativeTarget.m: Allow adding multiple times to the
+	source arrays.
+
 2009-03-02 02:23-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: Move include for common.make.
