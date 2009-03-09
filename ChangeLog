@@ -1,3 +1,9 @@
+2009-03-09 14:55-EDT Gregory John Casamento <greg_casamento@yahoo.com>
+
+	* PBPbxNativeTarget.m: Correct issue with building target.
+	* PBProjectGenerator.m: Temporarily remove code which generates the
+	PC.project contents.
+
 2009-03-06 22:01-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBMakefileGenerator.m: Correct C++ compilation issue.

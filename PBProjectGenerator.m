@@ -260,25 +260,26 @@
   NSString          *targetType = [target targetType];
   NSString          *pcType;
 
+  /*
   if([targetType isEqual: @"app"])
     {
-      pcType = [NSString stringWithString: @"Application"];
+      pcType = @"Application";
     }
   else if([targetType isEqual: @"tool"])
     {
-      pcType = [NSString stringWithString: @"Tool"];
+      pcType = @"Tool";
     }
   else if([targetType isEqual: @"framework"])
     {
-      pcType = [NSString stringWithString: @"Framework"];
+      pcType = @"Framework";
     }
   else if([targetType isEqual: @"library"])
     {
-      pcType = [NSString stringWithString: @"Library"];
+      pcType = @"Library";
     }
   else if([targetType isEqual: @"bundle"])
     {
-      pcType = [NSString stringWithString: @"Bundle"];
+      pcType = @"Bundle";
     }
   else 
     {
@@ -294,7 +295,8 @@
   [self insertIncludeDirsForTarget: target inProject: projectDictionary];
   
   [self insertFrameworkEntriesForTarget: target inProject: projectDictionary];
-  
+  */
+
   return [projectDictionary description];
 }
 @end

@@ -137,9 +137,11 @@
 
   if([[project version] isEqual: PBX_VERSION_TIGER]) 
     {
+      NSString *key = [target objectForKey: @"productType"]?
+	[target objectForKey: @"productType"]:
+	[target objectForKey: @"isa"];
       buildSettings = [self getBuildSettingsTigerForTarget: target];    
-      ASSIGN(targetType, [self standardizeTargetType: 
-                                 [target objectForKey: @"isa"]]);
+      ASSIGN(targetType, [self standardizeTargetType: key]);
     }
   else if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
