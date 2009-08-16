@@ -110,6 +110,10 @@
     return @"tool";
   if ([@"com.apple.product-type.bundle" isEqual: rawType])
     return @"bundle";
+  if ([@"com.apple.product-type.library.dynamic" isEqual: rawType])
+    {
+      return @"library";
+    }
   if ([@"com.apple.product-type.library.static" isEqual: rawType])
     {
       targetSubtype = @"static";

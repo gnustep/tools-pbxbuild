@@ -1,3 +1,7 @@
+2009-08-16 09:36-EDT Gregory John Casamento <greg.casamento@gmail.com>
+
+	* PBPbxNativeTarget.m: Change to allow compilation of dynamic libs.
+
 2009-03-09 14:55-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* PBPbxNativeTarget.m: Correct issue with building target.
