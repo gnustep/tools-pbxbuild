@@ -159,6 +159,12 @@
       ASSIGN(targetType, [self standardizeTargetType: 
 				 [target objectForKey: @"productType"]]);
     }
+  else if([[project version] isEqual: PBX_VERSION_SNOWLEOPARD])
+    {
+      buildSettings = [target objectForKey: @"buildSettings"];
+      ASSIGN(targetType, [self standardizeTargetType: 
+				 [target objectForKey: @"productType"]]);
+    }
   else
     {
       NSLog(@"Unsupported project version: '%@', quitting...",[project version]);
