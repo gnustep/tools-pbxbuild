@@ -23,6 +23,7 @@
 */
 
 #include "PBDevelopmentHelper.h"
+#include "PBPbxProject.h"
 
 @implementation PBDevelopmentHelper
 // Developing, Logging and Debugging

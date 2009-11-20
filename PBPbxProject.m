@@ -117,7 +117,7 @@
 
 
 @implementation PBPbxProject
-- (PBPbxProject *) initWithFile: (NSString *)fileName
+- (id) initWithFile: (NSString *)fileName
 {
   NSDictionary      *dict;
   NSMutableArray    *myTargets;
@@ -172,7 +172,7 @@
 	{
 	  AUTORELEASE(newTarget);
 	  [targets addObject: newTarget];
-	  NSLog(@"Found Target %@", [target objectForKey: @"name"]);
+	  NSDebugLog(@"Found Target %@", [target objectForKey: @"name"]);
 	}
     }
 
@@ -187,9 +187,27 @@
     }
 
   // and sort the targets according to dependency order
-  ASSIGN(targets, 
-	 [targets sortedArrayUsingSelector: @selector(compareDepends:)]);
-
+  targets = [[targets sortedArrayUsingSelector: @selector(compareDepends:)] mutableCopy];
+	
+  /* Read for project build settings */
+  //PBXProjext (buildConfigurationList) -> XCConfigurationList (defaultConfigurationName=, buildConfigurations{}) -> XCBuildConfiguration (name=, buildSettings={...}) 
+  NSString *defaultBuildConfigurationName;
+  NSDictionary *projectConfigurationList = [objects objectForKey:[rootObject objectForKey: @"buildConfigurationList"]];
+  defaultBuildConfigurationName = [projectConfigurationList objectForKey: @"defaultConfigurationName"];
+  e = [[projectConfigurationList objectForKey: @"buildConfigurations"] objectEnumerator];
+	
+  NSString *buildConfigurationKey;
+  while( (buildConfigurationKey = [e nextObject]) )
+    {
+      NSDictionary *buildConfiguration = [objects objectForKey: buildConfigurationKey];
+      if( [[buildConfiguration objectForKey: @"name"] isEqualToString:defaultBuildConfigurationName])
+        {
+          projectBuildSettings = [buildConfiguration objectForKey: @"buildSettings"];
+          NSDebugLog(@"Project build settings: %@", projectBuildSettings);
+          break;
+        }
+    }
+	
   return self;
 }
 
@@ -243,6 +261,11 @@
 - (NSString *) version
 {
   return AUTORELEASE(RETAIN(version));
+}
+
+- (NSDictionary *) projectBuildSettings
+{
+  return projectBuildSettings;
 }
 
 @end

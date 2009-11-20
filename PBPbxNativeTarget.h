@@ -48,6 +48,7 @@
   NSString            *productVersion;
   
   NSMutableSet        *includeDirs;
+  NSMutableSet        *libraryDirs;
   NSMutableArray      *headers;
   NSMutableSet        *headerNonGroupDirs;
   NSMutableDictionary *sources;
@@ -58,13 +59,19 @@
   NSMutableArray      *dependencyKeys;
   NSMutableDictionary *scripts;
   NSMutableSet        *targetDependencies;
+	
+  NSDictionary        *defaultBuildConfiguration;
+  NSString            *defaultConfigurationName ;
+	
+  NSDictionary        *buildSettings;
 }
+
 /**
  * <em>Designated Initializer</em>: Initializes this Class with
  * the given target as a [NSMutableDictionary] and objects
  * in order to look up the references stored in target .
  */
-- (PBPbxNativeTarget *) initWithProject: (PBPbxProject *)project
+- (id) initWithProject: (PBPbxProject *)project
 			      andTarget: (NSDictionary *)target
 			  withTargetKey: (NSString *)targetKey;
 /**
@@ -124,7 +131,7 @@
 /**
  * getter Method
  */
-- (NSString *) infoPlist;
+- (NSDictionary *) infoPlist;
 
 /**
  * getter Method
@@ -140,6 +147,11 @@
  * getter Method: returns an Array of [NSString]
  */
 - (NSMutableSet *) includeDirs;
+
+/**
+ * getter Method: returns an Array of [NSString]
+ */
+- (NSMutableSet *) libraryDirs;
 
 /**
  * getter Method: returns an Array of [NSString]
@@ -191,6 +203,16 @@
  * returns the description of the object
  */
 - (NSString *) description;
+
+/** 
+ * getter Method: returns a dictionary of the build settings
+ */
+- (NSDictionary *) buildSettings;
+
+/**
+ * getter Method: returns the proper extension
+ */
+- (NSString *) extension;
 
 - (void) dealloc;
 @end

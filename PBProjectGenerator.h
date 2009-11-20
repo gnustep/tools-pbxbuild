@@ -37,7 +37,7 @@
  * designated initializer, aProject is the project which Project 
  * is to be generated
  */
-- (PBProjectGenerator *) initWithProject: (PBPbxProject *) aProject;
+- (id) initWithProject: (PBPbxProject *) aProject;
 
 - (void) dealloc;
 
