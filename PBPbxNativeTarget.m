@@ -365,17 +365,18 @@
       NSRange range;
       range.location = 0;
       range.length   = i+1;
-      @try 
+      NS_DURING 
         {
           [includeDirs addObject: 
                          [NSString pathWithComponents:
                                      [pathComponents subarrayWithRange: range]
                           ]];
         }
-      @catch (NSException * e) 
+      NS_HANDLER
         {
           continue;
         }
+      NS_ENDHANDLER;
     }
 }
 
@@ -389,7 +390,7 @@
       NSRange range;
       range.location = 0;
       range.length   = i+1;
-      @try
+      NS_DURING
         {
           [libraryDirs addObject: 
                          [NSString pathWithComponents:
@@ -397,10 +398,11 @@
                           ]
            ];
         }
-      @catch (NSException * e) 
+      NS_HANDLER
         {
           continue;
         }
+      NS_ENDHANDLER
     }
 }
 
