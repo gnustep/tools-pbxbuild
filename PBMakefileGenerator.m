@@ -372,8 +372,8 @@
       // Get list of header files
       NSArray        *headerFilePaths = [[target headers] sortedArrayUsingSelector:@selector(compare:)];
       NSEnumerator   *e               = [headerFilePaths objectEnumerator];
-      NSMutableArray *headerFiles     = [[NSMutableArray alloc] initWithCapacity:[headerFilePaths count]];
-      NSMutableSet   *directories     = [[NSMutableSet alloc] initWithCapacity:[headerFilePaths count]]; //Set so we don't get duplicates
+      NSMutableArray *headerFiles     = [[NSMutableArray alloc] initWithCapacity: [headerFilePaths count]];
+      NSMutableSet   *directories     = [[NSMutableSet alloc] initWithCapacity: [headerFilePaths count]]; //Set so we don't get duplicates
       NSString       *path;
 
       // Remove directory paths from them
@@ -396,7 +396,6 @@
            InMakefile: makefile
 	    withTargetName: tName
 	    andPrefix: @"HEADER_FILES"];
-      [headerFiles release];
 		
       // So it knows where to find these headers
       //TODO: Can only specify on dir, so need to make a temp dir and copy/link them all to that
