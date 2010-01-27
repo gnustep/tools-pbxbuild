@@ -28,7 +28,8 @@
 #include <Foundation/Foundation.h>
 @class PBPbxProject;
 
-#define PBX_VERSION_SNOWLEOPARD @"45"
+#define PBX_VERSION_SNOWLEOPARD_XCODE_3_2 @"46"
+#define PBX_VERSION_SNOWLEOPARD_XCODE_3_1 @"45"
 #define PBX_VERSION_LEOPARD @"44"
 #define PBX_VERSION_TIGER @"42"
 #define PBX_VERSION_PANTHER @"39"

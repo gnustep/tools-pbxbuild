@@ -1,3 +1,12 @@
+2010-01-26 Eric Wasylishen <ewasylishen@gmail.com>
+	* PBPbxNativeTarget.h: Rename PBX_VERSION_SNOWLEOPARD to
+	PBX_VERSION_SNOWLEOPARD_XCODE_3_1 and add
+	PBX_VERSION_SNOWLEOPARD_XCODE_3_2.
+	* PBPbxNativeTarget.m: Use the Tiger/Panther method of getting
+	the Info.plist path on Tiger and later.
+	Modify the search for "buildSettings" on XCODE_3_1 and XCODE_3_2
+	to also check the build configuration list (same as Tiger and Leopard)
+
 2009-12-15 04:29-WIT Hans Baier <hansfbaier@googlemail.com>
 	* PBPbxMakefileGenerator.m: fix crash bug: double release
 

@@ -196,9 +196,14 @@
       buildSettings = [self getBuildSettingsTigerForTarget: target];
       ASSIGN(targetType, [self standardizeTargetType:[target objectForKey: @"productType"]]);
     }
-  else if([[project version] isEqual: PBX_VERSION_SNOWLEOPARD])
+  else if([[project version] isEqual: PBX_VERSION_SNOWLEOPARD_XCODE_3_1] ||
+          [[project version] isEqual: PBX_VERSION_SNOWLEOPARD_XCODE_3_2])
     {
       buildSettings = [target objectForKey: @"buildSettings"];
+      if (nil == buildSettings)
+        {
+          buildSettings = [self getBuildSettingsTigerForTarget: target];
+        }
       ASSIGN(targetType, [self standardizeTargetType: 
                                 [target objectForKey: @"productType"]]);
     }
@@ -238,8 +243,7 @@
 			  propertyList]);
       
     }
-  else if([[project version] isEqual: PBX_VERSION_TIGER] ||
-	  [[project version] isEqual: PBX_VERSION_LEOPARD]) 
+  else // Tiger and above
     {
       ASSIGN(infoPlistFile, [buildSettings objectForKey: @"INFOPLIST_FILE"]);
       
