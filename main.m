@@ -3,7 +3,7 @@
 
    Copyright (C) 2006 Free Software Foundation
 
-   Author: Hans Baier,,,
+   Author: Hans Baier
 
    Created: 2006-08-09 04:23:23 +0200 by jack
 
