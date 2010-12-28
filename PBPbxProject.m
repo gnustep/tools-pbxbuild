@@ -45,10 +45,10 @@
   NSDictionary *groupOrFile;
   NSString     *childKey;
   
-  groupOrFile = [objects  objectForKey: aKey];
+  groupOrFile = [objects objectForKey: aKey];
 
   e = [[groupOrFile objectForKey: @"children"] objectEnumerator];
-  while ( (childKey = [e nextObject]) )
+  while ((childKey = [e nextObject]))
     {
       NSDictionary *child     = [objects objectForKey: childKey];
       NSString     *childType = [child   objectForKey: @"isa"];
@@ -100,6 +100,10 @@
 	    RELEASE(pbxGroup);
 
 	  [self addGroupRecursivelyByKey: childKey parentPath: newPath];
+	}
+      else if ([@"PBXVariantGroup" isEqual: childType])
+	{
+	  [self addGroupRecursivelyByKey: childKey parentPath: nil];
 	}
       else if ([@"PBXFileReference" isEqual: childType])
 	{

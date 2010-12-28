@@ -256,16 +256,16 @@ main(int argc, const char *argv[], char *env[])
 NSString *
 findProjectFilename(NSArray *projectDirEntries)
 {
-  NSEnumerator *e        = [projectDirEntries objectEnumerator];
+  NSEnumerator *e = [projectDirEntries objectEnumerator];
   NSString     *fileName;
 
-  while ( (fileName = [e nextObject]) )
+  while ((fileName = [e nextObject]))
     {
       if (   [[fileName pathExtension] isEqual: @"xcode"]
-	  || [[fileName pathExtension] isEqual: @"xcodeproj"] )
+	  || [[fileName pathExtension] isEqual: @"xcodeproj"]
+	  || [[fileName pathExtension] isEqual: @"pbproj"] )
 	return [fileName stringByAppendingPathComponent: @"project.pbxproj"];
     }
 
   return nil;
 }
-

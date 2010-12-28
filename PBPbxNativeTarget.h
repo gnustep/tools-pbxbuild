@@ -33,6 +33,7 @@
 #define PBX_VERSION_LEOPARD @"44"
 #define PBX_VERSION_TIGER @"42"
 #define PBX_VERSION_PANTHER @"39"
+#define PBX_VERSION_JAGUAR @"38"
 
 @interface PBPbxNativeTarget : NSObject
 {
@@ -61,9 +62,6 @@
   NSMutableDictionary *scripts;
   NSMutableSet        *targetDependencies;
 	
-  NSDictionary        *defaultBuildConfiguration;
-  NSString            *defaultConfigurationName ;
-	
   NSDictionary        *buildSettings;
 }
 
@@ -73,8 +71,9 @@
  * in order to look up the references stored in target .
  */
 - (id) initWithProject: (PBPbxProject *)project
-			      andTarget: (NSDictionary *)target
-			  withTargetKey: (NSString *)targetKey;
+             andTarget: (NSDictionary *)target
+         withTargetKey: (NSString *)targetKey;
+
 /**
  * traverses the dependency Keys for the target and
  * sets the field targetDependencies with links to the other [PBPbxNativeTarget]s
