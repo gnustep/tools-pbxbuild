@@ -3,7 +3,7 @@
 
    Copyright (C) 2006 Free Software Foundation
 
-   Author: Hans Baier
+   Author: Hans Baier,,,
 
    Created: 2006-08-09 04:23:23 +0200 by jack
 
@@ -54,23 +54,25 @@ main(int argc, const char *argv[], char *env[])
   NSEnumerator               *e;
   NSFileManager              *fileManager;
   NSString                   *pbxbuildDir;
+  NSTask                     *make;
+  NSString                   *makefile;
   NSString                   *pcfile;
 
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  CREATE_AUTORELEASE_POOL(pool);
   fileManager = [NSFileManager defaultManager];
 
   /* let's call our cmdline parser */
   if (cmdline_parser (argc, argv, &args_info) != 0)
     {
       cmdline_parser_print_help();
-      [pool release];
+      RELEASE(pool);
       exit(EXIT_FAILURE);
     }
 
   if (args_info.help_given)
     {
       cmdline_parser_print_help();
-      [pool release];
+      RELEASE(pool);
       exit(EXIT_SUCCESS);
     }
 
@@ -81,12 +83,9 @@ main(int argc, const char *argv[], char *env[])
 
   if (args_info.debug_given)
     {
-      #ifdef GNUSTEP
-      NSMutableSet *debugSet;
       [[NSProcessInfo processInfo] setDebugLoggingEnabled: YES];
-      debugSet = [[NSProcessInfo processInfo] debugSet];
+      NSMutableSet *debugSet = [[NSProcessInfo processInfo] debugSet];
       [debugSet addObject: @"dflt"];
-      #endif
     }
 
   // get the direntries of the current directory
@@ -143,51 +142,55 @@ main(int argc, const char *argv[], char *env[])
   e = [[project targets] objectEnumerator];
   while ( (target = [e nextObject]) )
     {
-      NSEnumerator *f = [projectDirEntries objectEnumerator];
+      NSEnumerator *f = nil;
       NSString   *projectDirEntry;
       NSString   *makefile;
       NSString   *newTName = [[target targetName] stringByReplacingString: @" "
 						  withString: @"_"];
-
       NSString   *targetDir = 
 	[pbxbuildDir stringByAppendingPathComponent:
 		       [newTName
-			 stringByAppendingPathExtension: [target extension]]];
+			 stringByAppendingPathExtension: [target targetType]]];
+      NSDictionary *sourceDict = [target sources];
+      NSMutableArray *sources = [NSMutableArray arrayWithCapacity: 50];
+      NSArray *headers = [target headers];
 
-      [fileManager createDirectoryAtPath: targetDir attributes: nil];
+      [sources addObjectsFromArray: [sourceDict objectForKey: @"m"]];
+      [sources addObjectsFromArray: [sourceDict objectForKey: @"c"]];
+      [sources addObjectsFromArray: [sourceDict objectForKey: @"cpp"]];
+      [sources addObjectsFromArray: headers];
+      f = [sources objectEnumerator];
+
+      [fileManager createDirectoryAtPath: targetDir 
+		   withIntermediateDirectories: YES
+		   attributes: nil
+		   error: NULL];
       
       // link all dir entries of the project directory into the target dir
       while ( (projectDirEntry = [f nextObject]) ) 
 	{
+	  NSString *source = 
+	    [projectDir stringByAppendingPathComponent: projectDirEntry];
 	  NSString *destination = 
 	    [targetDir stringByAppendingPathComponent: projectDirEntry];
+	  NSString *destDir = [destination stringByDeletingLastPathComponent];
+
+	  // Create any directories which might be in mentioned in the entry.
+	  [fileManager createDirectoryAtPath: destDir
+		       withIntermediateDirectories: YES
+		       attributes: nil
+		       error: NULL];
 
 	  // skip existing GNUmakefiles
 	  if ([projectDirEntry hasPrefix: @"GNUmakefile"])
 	    continue;
 					       
-#ifdef __MINGW32__
-	  {
-	    NSString *source = 
-	      [projectDir stringByAppendingPathComponent: projectDirEntry];
-	    NSDebugLog(@"Copying from '%@' to '%@'", 
-		  source,
-		  destination);
-	    [fileManager copyPath: source
-			 toPath: destination
-			 handler: nil];
-	  }
-#else
-	  {
-	    NSString *source = 
-	      [@"../../"  stringByAppendingPathComponent: projectDirEntry];
-	    NSDebugLog(@"Creating symbolic link from '%@' to '%@'", 
-		       source,
-		       destination);
-	    [fileManager createSymbolicLinkAtPath: destination
-			 pathContent: source];
-	  }
-#endif
+	  NSDebugLog(@"Copying from '%@' to '%@'", 
+		     source,
+		     destination);
+	  [fileManager copyPath: source
+		       toPath: destination
+		       handler: nil];
 	}
 
       // generate and write makefile
@@ -206,28 +209,20 @@ main(int argc, const char *argv[], char *env[])
       [pcfile writeToFile: 
 		[targetDir stringByAppendingPathComponent: @"PC.project"]
 	      atomically: YES];
-
       // create link to Info.plist file
-      NSString * infoPlistTargetPath = [targetDir stringByAppendingPathComponent: 
-                                                      [NSString stringWithFormat: @"%@Info.plist", [target targetName]]];
+
       if ([target infoPlistFile] != nil)
-        {
-          [fileManager 
-		   copyPath:	[projectDir stringByAppendingPathComponent: [target infoPlistFile]]
-                     toPath:		infoPlistTargetPath
-                    handler:		nil];
-          
-          //Fix XCode variables
-          NSString *plistString = [NSString stringWithContentsOfFile:infoPlistTargetPath];
-	
-          plistString = [plistString stringByReplacingString: @"${EXECUTABLE_NAME}" withString:[target targetName]];
-          plistString = [plistString stringByReplacingString: @"${PRODUCT_NAME:identifier}" withString:[target targetName]];
-          [plistString writeToFile:infoPlistTargetPath atomically:YES];
-        }
-      else 
-        {
-          [[target infoPlist] writeToFile:infoPlistTargetPath atomically: YES];		
-        }
+	[fileManager 
+	  copyPath: 
+	    [projectDir stringByAppendingPathComponent: [target infoPlistFile]]
+	  toPath:    
+	    [targetDir stringByAppendingPathComponent: @"Info-gnustep.plist"]
+	  handler: nil];
+      else // if not nil, the Info plist was in the pbxproj file
+	[[target infoPlist] 
+	  writeToFile: 
+	    [targetDir stringByAppendingPathComponent: @"Info-gnustep.plist"] 
+	  atomically: YES];
     }
 
   // if user wants to generate makefile only, exit here
@@ -242,9 +237,13 @@ main(int argc, const char *argv[], char *env[])
 
   // finally changedir to the pbxbuild directory and run make
   [fileManager changeCurrentDirectoryPath: @"pbxbuild"];
+  // make = [[NSTask alloc] init];
+  // [make setLaunchPath: @"make"];
+  // [make setArguments: [NSArray arrayWithObjects: @"-k", nil]];
+  // [make launch];
+  system("make -k");
 
-  int exitstatus = system("make -k");
-
+  // RELEASE(make);
   AUTORELEASE(project);
   AUTORELEASE(pcGenerator);
   AUTORELEASE(makefileGenerator);
@@ -256,16 +255,16 @@ main(int argc, const char *argv[], char *env[])
 NSString *
 findProjectFilename(NSArray *projectDirEntries)
 {
-  NSEnumerator *e = [projectDirEntries objectEnumerator];
+  NSEnumerator *e        = [projectDirEntries objectEnumerator];
   NSString     *fileName;
 
-  while ((fileName = [e nextObject]))
+  while ( (fileName = [e nextObject]) )
     {
       if (   [[fileName pathExtension] isEqual: @"xcode"]
-	  || [[fileName pathExtension] isEqual: @"xcodeproj"]
-	  || [[fileName pathExtension] isEqual: @"pbproj"] )
+	  || [[fileName pathExtension] isEqual: @"xcodeproj"] )
 	return [fileName stringByAppendingPathComponent: @"project.pbxproj"];
     }
 
   return nil;
 }
+

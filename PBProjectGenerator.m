@@ -1,9 +1,9 @@
 /*
    Project: pbxbuild
 
-   Copyright (C) 2006, 2009 Free Software Foundation
+   Copyright (C) 2006 Free Software Foundation
 
-   Author: Hans Baier, Gregory Casamento
+   Author: Hans Baier,,,
 
    Created: 2006-08-09 13:27:20 +0200 by jack
 
@@ -193,7 +193,7 @@
 		     forKey: @"LOCALIZED_RESOURCES"];
   
   [projectDictionary setObject: nibFiles
-		     forKey: @"INTERFACES"];
+		     forKey:@"INTERFACES"];
   
   [projectDictionary setObject: languages
 		     forKey: @"USER_LANGUAGES"];
@@ -203,7 +203,7 @@
 
 
 @implementation PBProjectGenerator
-- (id) initWithProject: (PBPbxProject *) aProject;
+- (PBProjectGenerator *) initWithProject: (PBPbxProject *) aProject;
 {  
   self = [super init];
   if(self != nil)
@@ -226,9 +226,9 @@
 }
 
 - (NSString *) getSubprojectNameForTarget: (PBPbxNativeTarget *)target
-{	
+{
   return [[target targetNameReplacingSpaces] 
-	   stringByAppendingPathExtension: [target extension]];
+	   stringByAppendingPathExtension: [target targetType]];
 }
 
 - (NSString *) generateProjectFile
@@ -260,26 +260,25 @@
   NSString          *targetType = [target targetType];
   NSString          *pcType;
 
-  /*
   if([targetType isEqual: @"app"])
     {
-      pcType = @"Application";
+      pcType = [NSString stringWithString: @"Application"];
     }
   else if([targetType isEqual: @"tool"])
     {
-      pcType = @"Tool";
+      pcType = [NSString stringWithString: @"Tool"];
     }
   else if([targetType isEqual: @"framework"])
     {
-      pcType = @"Framework";
+      pcType = [NSString stringWithString: @"Framework"];
     }
   else if([targetType isEqual: @"library"])
     {
-      pcType = @"Library";
+      pcType = [NSString stringWithString: @"Library"];
     }
   else if([targetType isEqual: @"bundle"])
     {
-      pcType = @"Bundle";
+      pcType = [NSString stringWithString: @"Bundle"];
     }
   else 
     {
@@ -295,8 +294,7 @@
   [self insertIncludeDirsForTarget: target inProject: projectDictionary];
   
   [self insertFrameworkEntriesForTarget: target inProject: projectDictionary];
-  */
-
+  
   return [projectDictionary description];
 }
 @end

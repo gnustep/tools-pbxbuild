@@ -31,10 +31,18 @@
  * rawType is transformed into a GNUmakefile compliant string
  * e.g. com.apple.product-type.application -> app
  */
-- (NSString *) standardizeTargetType: (NSString *)rawType;
+
+- (NSString *) standardizeTigerTargetType: (NSString *)rawType;
 
 /**
- * This sets up the paths where the compiler should search
+ * the targets isa field is transformed to a standard target type
+ * e.g. PBXApplicationTarget -> app
+ */
+
+- (NSString *) standardizePantherTargetType: (NSString *)targetIsa;
+
+/**
+ * This sets up the paths where the compiler should search 
  * for include directories
  */
 - (void) setUpIncludeDirsForTarget: (NSDictionary *)target;
@@ -46,12 +54,6 @@
 - (void) addPathComponentsToIncludeDirs: (NSArray *)pathComponents;
 
 /**
- * This adds all path components in the given array to library paths
- * e.g. foo, bar, baz -> foo, foo/bar, foo/bar/baz
- */
-- (void) addPathComponentsToLibraryDirs: (NSArray *)pathComponents;
-
-/**
  * get the build settings for tiger projects
  */
 - (NSDictionary *) getBuildSettingsTigerForTarget: (NSDictionary *)target;
@@ -61,7 +63,7 @@
  * for Headers, Sources, returns whether the target could be
  * processed successfully
  */
-- (void) traverseBuildPhasesOfTarget: (NSDictionary *)target;
+- (BOOL) traverseBuildPhasesOfTarget: (NSDictionary *)target;
 
 /**
  * Gets the type for the file.
@@ -81,14 +83,6 @@
  */
 - (void) retrieveFileListFromBuildPhase: (NSDictionary *)buildPhase
 		       andStoreResultIn: (NSMutableArray *)anArray;
-
-/**
- * retrieves all the files belonging to source buildPhase and stores the
- * into the dictionary.
- */
-- (void) retrieveShellCommandsFromBuildPhase: (NSDictionary *)buildPhase
-			    andStoreResultIn: (NSMutableDictionary *)aDictionary;
-
 /**
  * looks up the path from the file handle in the PBX*BuildPhase
  * and stores the file references
@@ -99,14 +93,14 @@
  * checks whether the file is in a group with group path
  * and if so, appends the group path and adds the result to anArray
  */
-- (void)              addPath: (NSString *)path
-         withFileReferenceKey: (NSString *)fHandle
+- (void)              addPath: (NSString *)path 
+         withFileReferenceKey: (NSString *)fHandle 
                       toArray: (NSMutableArray *)anArray
 			 type: (NSString *)type;
 @end
 
 @implementation PBPbxNativeTarget (Private)
-- (NSString *) standardizeTargetType: (NSString *)rawType
+- (NSString *) standardizeTigerTargetType: (NSString *)rawType
 {
   if ([@"com.apple.product-type.application" isEqual: rawType])
     return @"app";
@@ -116,122 +110,46 @@
     return @"tool";
   if ([@"com.apple.product-type.bundle" isEqual: rawType])
     return @"bundle";
-  if ([@"com.apple.product-type.library.dynamic" isEqual: rawType])
-    {
-      return @"library";
-    }
-  if ([@"com.apple.product-type.library.static" isEqual: rawType])
-    {
-      targetSubtype = @"static";
-      return @"library";
-    }
-
-  if ([@"PBXApplicationTarget" isEqual: rawType])
-    return @"app";
-  if ([@"PBXFrameworkTarget" isEqual: rawType])
-    return @"framework";
-  if ([@"PBXToolTarget" isEqual: rawType])
-    return @"tool";
-  if ([@"PBXBundleTarget" isEqual: rawType])
-    return @"bundle";
 
   return nil;
 }
 
-- (NSDictionary *) buildConfigurationListForTarget: (NSDictionary *)target
+- (NSString *) standardizePantherTargetType: (NSString *)targetIsa
 {
-  NSString *buildConfigurationListKey;
-  NSDictionary *buildConfigurationList;
+  if([@"PBXApplicationTarget" isEqual: targetIsa])
+    return @"app";
+  if([@"PBXBundleTarget" isEqual: targetIsa])
+    return @"bundle";
+  if([@"PBXFrameworkTarget" isEqual: targetIsa])
+    return @"framework";
 
-  buildConfigurationListKey = [target objectForKey: @"buildConfigurationList"];
-  if (buildConfigurationListKey == nil)
-    {
-      NSLog(@"Error: Could not find object for buildConfigurationList");
-      return nil;
-    }
-
-  buildConfigurationList = [objects objectForKey: buildConfigurationListKey];
-  return buildConfigurationList;
+  return nil;
 }
 
-- (NSDictionary *) defaultBuildConfigurationFor: (NSDictionary *)buildConfigurationList
+- (BOOL) traverseBuildPhasesOfTarget: (NSDictionary *)target
 {
-  NSDictionary *defaultConfiguration = nil;
+  NSDictionary *buildSettings;
+  NSString     *buildPhaseKey;
+  NSDictionary *buildPhase;
   NSEnumerator *e;
-  NSString     *buildConfigurationKey;
-  NSString     *defaultConfigurationName;
 
-  defaultConfigurationName = [buildConfigurationList objectForKey: @"defaultConfigurationName"];
-  e = [[buildConfigurationList objectForKey: @"buildConfigurations"]
-        objectEnumerator];
-  while ((buildConfigurationKey = [e nextObject]))
+  if([[project version] isEqual: PBX_VERSION_TIGER]) 
     {
-      NSDictionary *buildConfiguration = [objects objectForKey: buildConfigurationKey];
-      if ([[buildConfiguration objectForKey: @"name"] isEqualToString: defaultConfigurationName])
+      if(![[target objectForKey: @"isa"] isEqual: @"PBXNativeTarget"])
         {
-          defaultConfiguration = buildConfiguration;
-          break;
-        }
+          NSLog(@"Don't know how to handle target with type: %@, skipping...",
+                [target objectForKey: @"isa"] );
+          return NO; 
+        }      
+      buildSettings = [self getBuildSettingsTigerForTarget: target];    
+      ASSIGN(targetType, [self standardizeTigerTargetType: 
+                                 [target objectForKey: @"productType"]]);
     }
-
-  return defaultConfiguration;
-}
-
-- (NSDictionary*) getDefaultConfiguration: (NSDictionary *)target
-{
-  NSDictionary *buildConfigurationList;
-
-  buildConfigurationList = [self buildConfigurationListForTarget: target];
-  return [self defaultBuildConfigurationFor: buildConfigurationList];
-}
-
-- (NSDictionary *) getBuildSettingsTigerForTarget: (NSDictionary *)target
-{
-  NSString *defaultConfigurationType;
-  NSDictionary *defaultBuildConfiguration;
-	
-  // Get the default build configuration
-  defaultBuildConfiguration = [self getDefaultConfiguration: target];
-
-  defaultConfigurationType = [defaultBuildConfiguration objectForKey: @"isa"];
-  if (![@"XCBuildConfiguration" isEqual: defaultConfigurationType])
-    {
-      NSLog(@"FATAL: expected 'XCBuildConfiguration', but got '%@'",
-            defaultConfigurationType);
-      exit (EXIT_FAILURE);
-    }
-
-  return [defaultBuildConfiguration objectForKey: @"buildSettings"];
-}
-
-- (BOOL) setBuildSettingsForTarget: (NSDictionary *)target
-{
-  NSString *version = [project version];
-  NSString *key = [target objectForKey: @"productType"] ?
-    [target objectForKey: @"productType"] : [target objectForKey: @"isa"];
-
-  if ([version isEqual: PBX_VERSION_JAGUAR] ||
-      [version isEqual: PBX_VERSION_PANTHER])
+  else if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
       buildSettings = [target objectForKey: @"buildSettings"];
-    }
-  else if ([version isEqual: PBX_VERSION_TIGER])
-    {
-      buildSettings = [self getBuildSettingsTigerForTarget: target];
-    }
-  else if ([version isEqual: PBX_VERSION_LEOPARD])
-    {
-      // Seems to have the same behavior as TIGER version, where is uses a buildConfigurationList
-      buildSettings = [self getBuildSettingsTigerForTarget: target];
-    }
-  else if ([version isEqual: PBX_VERSION_SNOWLEOPARD_XCODE_3_1] ||
-           [version isEqual: PBX_VERSION_SNOWLEOPARD_XCODE_3_2])
-    {
-      buildSettings = [target objectForKey: @"buildSettings"];
-      if (nil == buildSettings)
-        {
-          buildSettings = [self getBuildSettingsTigerForTarget: target];
-        }
+      ASSIGN(targetType, [self standardizePantherTargetType: 
+				 [target objectForKey: @"isa"]]);
     }
   else
     {
@@ -239,58 +157,37 @@
       exit(EXIT_FAILURE);
     }
 
-  ASSIGN(targetType, [self standardizeTargetType: key]);
-  if (targetType == nil)
-    {
-      NSDebugLog(@"Don't know how to handle target type: '%@', skipping...", key);
-      return NO;
-    }
-
   ASSIGN(targetName, [buildSettings objectForKey: @"PRODUCT_NAME"]);
-  if (targetName == nil)
+  if(targetName == nil)
     {
       ASSIGN(targetName, [target objectForKey: @"name"]);
     }
 
-  return YES;
-}
+  if(targetType == nil)
+    {
+      NSLog(@"Don't know how to handle target type: '%@', quitting...", 
+	    [target objectForKey: @"productType"]);
+      exit(EXIT_FAILURE);
+    }
 
-- (void) traverseBuildPhasesOfTarget: (NSDictionary *)target
-{
-  NSString     *buildPhaseKey;
-  NSDictionary *buildPhase;
-  NSEnumerator *e;
-
-  if ([[project version] isEqual: PBX_VERSION_PANTHER] ||
-      [[project version] isEqual: PBX_VERSION_JAGUAR])
+  if([[project version] isEqual: PBX_VERSION_PANTHER]) 
     {
       infoPlistFile = nil;
-      ASSIGN(infoPlist, [[target objectForKey: @"productSettingsXML"]
+      ASSIGN(infoPlist, [[target objectForKey: @"productSettingsXML"] 
 			  propertyList]);
+      
     }
-  else // Tiger and above
+  else if([[project version] isEqual: PBX_VERSION_TIGER])
     {
       ASSIGN(infoPlistFile, [buildSettings objectForKey: @"INFOPLIST_FILE"]);
-
-      // Replace CFBundleExecutable = "${EXECUTABLE_NAME}" and CFBundleIdentifier = ${PRODUCT_NAME:identifier}
-      // with the proper values
-      NSMutableDictionary * mutableInfo = [NSMutableDictionary dictionaryWithContentsOfFile:infoPlistFile];
-      NSString * bundleExecutable = [mutableInfo valueForKey: @"CFBundleExecutable"];
-      NSString * bundleIdentifier = [mutableInfo valueForKey: @"CFBundleIdentifier"];
-      bundleExecutable = [bundleExecutable stringByReplacingString: @"${EXECUTABLE_NAME}" withString:[self targetName]];
-      bundleIdentifier = [bundleIdentifier stringByReplacingString: @"${PRODUCT_NAME:identifier}" withString:[self targetName]];
-
-      [mutableInfo setValue:bundleExecutable forKey: @"CFBundleExecutable"];
-      [mutableInfo setValue:bundleIdentifier forKey: @"CFBundleIdentifier"];
-
-      ASSIGN(infoPlist, [mutableInfo copy]);
+      ASSIGN(infoPlist, [NSDictionary 
+			  dictionaryWithContentsOfFile: infoPlistFile]);
     }
-
+  
   ASSIGN(productVersion, [infoPlist objectForKey: @"CFBundleVersion"]);
-  if (productVersion == nil)
-    {
-      ASSIGN(productVersion, @"0");
-    }
+
+  // this one will be symlinked to the real Info.plist file
+  [resources addObject: @"Info-gnustep.plist"];
 
   // get the files involved in building the target
   e = [[target objectForKey: @"buildPhases"] objectEnumerator];
@@ -303,85 +200,63 @@
       buildPhaseType = [buildPhase objectForKey: @"isa"];
       if ([buildPhaseType isEqual: @"PBXHeadersBuildPhase"])
 	{
-	  [self retrieveFileListFromBuildPhase: buildPhase
-                              andStoreResultIn: headers];
-
-	  [self retrieveSourceFileListFromBuildPhase: buildPhase
-                                    andStoreResultIn: sources];
+	  [self retrieveFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: headers];
 	}
       else if ([buildPhaseType isEqual: @"PBXSourcesBuildPhase"])
 	{
-	  [self retrieveSourceFileListFromBuildPhase: buildPhase
-                                    andStoreResultIn: sources];
+	  [self retrieveSourceFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: sources];
 	}
-      else if ([buildPhaseType isEqual: @"PBXResourcesBuildPhase"])
+       else if ([buildPhaseType isEqual: @"PBXResourcesBuildPhase"])
  	{
-	  [self retrieveFileListFromBuildPhase: buildPhase
-                              andStoreResultIn: resources];
+	  [self retrieveFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: resources];
 	}
       else if ([buildPhaseType isEqual: @"PBXFrameworksBuildPhase"])
 	{
-	  [self retrieveFileListFromBuildPhase: buildPhase
-                              andStoreResultIn: frameworks];
+	  [self retrieveFileListFromBuildPhase: buildPhase 
+		andStoreResultIn: frameworks];
 	}
-      else if ([buildPhaseType isEqual: @"PBXShellScriptBuildPhase"])
-	{
-	  [self retrieveShellCommandsFromBuildPhase: buildPhase
-                                   andStoreResultIn: scripts];
-	}
+      else
+	NSLog(@"Skipping Build Phase %@, not recognized yet", buildPhaseType);
     }
+  return YES;
 }
 
 - (void) setUpIncludeDirsForTarget: (NSDictionary *)target
 {
-  id headerSearchPaths;
-  id librarySearchPaths;
+  NSArray      *buildConfigurationKeys = 
+    [[objects objectForKey: [target objectForKey: @"buildConfigurationList"]]
+      objectForKey: @"buildConfigurations"];
+  NSEnumerator *e = [buildConfigurationKeys objectEnumerator];
+  NSString     *headerSearchPaths;
+  NSString     *buildConfigurationKey;
 
-  if ([[project version] isEqual: PBX_VERSION_JAGUAR] ||
-      [[project version] isEqual: PBX_VERSION_PANTHER])
+  if([[project version] isEqual: PBX_VERSION_PANTHER])
     {
-      headerSearchPaths = [buildSettings
+      headerSearchPaths = [[target objectForKey: @"buildSettings"]
 			    objectForKey: @"HEADER_SEARCH_PATHS"];
-      //Don't know what panther looks like so this may not be needed/usable.
-      if(headerSearchPaths == nil)
-        headerSearchPaths = [[project projectBuildSettings] objectForKey: @"HEADER_SEARCH_PATHS"];
-
-      [self addPathComponentsToIncludeDirs:
+      [self addPathComponentsToIncludeDirs: 
 	      [headerSearchPaths pathComponents]];
     }
   else
-    {
-      // *SearchPaths could be an Array or String depending if there are mutliple values
+    while ( (buildConfigurationKey = [e nextObject]) )
+      {
+	NSDictionary *buildConfiguration = 
+	  [objects objectForKey: buildConfigurationKey];
+	
+	if (![[buildConfiguration objectForKey: @"name"] 
+	       isEqual: @"Development"])
+	  continue;
+	
+	headerSearchPaths = 
+	  [[buildConfiguration objectForKey: @"buildSettings"]
+			      objectForKey: @"HEADER_SEARCH_PATHS"];
 
-      // Check target for settings first, then use project wide settings as fall back, like XCode does.
-      headerSearchPaths = [buildSettings objectForKey: @"HEADER_SEARCH_PATHS"];
-      if(headerSearchPaths == nil)
-        headerSearchPaths = [[project projectBuildSettings] objectForKey: @"HEADER_SEARCH_PATHS"];
-
-      if( [headerSearchPaths isKindOfClass:[NSString class]])
-        [self addPathComponentsToIncludeDirs: [headerSearchPaths pathComponents]];
-      else if( [headerSearchPaths isKindOfClass:[NSArray class]])
-        {
-          NSEnumerator *e = [headerSearchPaths objectEnumerator];
-          NSString *path;
-          while( (path = [e nextObject] ))
-            [self addPathComponentsToIncludeDirs: [path pathComponents]];
-        }
-
-      librarySearchPaths = [buildSettings objectForKey: @"LIBRARY_SEARCH_PATHS"];
-      if(librarySearchPaths == nil)
-        librarySearchPaths = [[project projectBuildSettings] objectForKey: @"LIBRARY_SEARCH_PATHS"];
-
-      if( [librarySearchPaths isKindOfClass:[NSString class]])
-        [self addPathComponentsToLibraryDirs: [librarySearchPaths pathComponents]];
-      else 	if( [librarySearchPaths isKindOfClass:[NSArray class]])
-        {
-          NSEnumerator *e              = [librarySearchPaths objectEnumerator];
-          NSString *path;
-          while( (path = [e nextObject] ))
-            [self addPathComponentsToLibraryDirs: [path pathComponents]];
-        }
-    }
+	[self addPathComponentsToIncludeDirs: 
+		[headerSearchPaths pathComponents]];
+      }
 }
 
 - (void) addPathComponentsToIncludeDirs: (NSArray *)pathComponents
@@ -394,46 +269,43 @@
       NSRange range;
       range.location = 0;
       range.length   = i+1;
-      NS_DURING
-        {
-          [includeDirs addObject:
-                         [NSString pathWithComponents:
-                                     [pathComponents subarrayWithRange: range]
-                          ]];
-        }
-      NS_HANDLER
-        {
-          continue;
-        }
-      NS_ENDHANDLER;
+	  
+      [includeDirs addObject: 
+		     [NSString pathWithComponents:
+				 [pathComponents subarrayWithRange: range]
+		      ]
+       ];
     }
 }
 
-- (void) addPathComponentsToLibraryDirs: (NSArray *)pathComponents
+- (NSDictionary *) getBuildSettingsTigerForTarget: (NSDictionary *)target
 {
-  int i;
+  NSDictionary *buildConfigurationList;
+  NSDictionary *defaultConfiguration;
+  NSString     *defaultConfigurationType;
 
-  // add all Directories in the path to the array
-  for (i=0; i<[pathComponents count]; i++)
+  // get target name and type
+  buildConfigurationList = 
+    [objects objectForKey: [target objectForKey: 
+				     @"buildConfigurationList"]];
+  // the last object in the buildConfigurationList is the
+  // defaultConfiguration
+  defaultConfiguration = 
+    [objects objectForKey: 
+	       [[buildConfigurationList objectForKey: 
+					 @"buildConfigurations"]
+		 lastObject]];
+  defaultConfigurationType = [defaultConfiguration objectForKey: @"isa"];
+  if (![@"XCBuildConfiguration" isEqual: defaultConfigurationType])
     {
-      NSRange range;
-      range.location = 0;
-      range.length   = i+1;
-      NS_DURING
-        {
-          [libraryDirs addObject:
-                         [NSString pathWithComponents:
-                                     [pathComponents subarrayWithRange: range]
-                          ]
-           ];
-        }
-      NS_HANDLER
-        {
-          continue;
-        }
-      NS_ENDHANDLER
+      NSLog(@"FATAL: expected 'XCBuildConfiguration', but got '%@'",
+	defaultConfigurationType);
+      exit (EXIT_FAILURE);
     }
+  
+  return [defaultConfiguration objectForKey: @"buildSettings"];
 }
+
 
 - (NSString *) lookupResourceTypeOfPbxBuildFileRef: (NSString *)pbxFileRef
 {
@@ -441,45 +313,13 @@
   NSString     *fileRef          = [pbxBuildFile objectForKey: @"fileRef"];
   NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
   NSString *type = [pbxFileReference objectForKey: @"lastKnownFileType"];
-
-  if (type == nil)
+  
+  if(type == nil)
     {
       type = [pbxFileReference objectForKey: @"explicitFileType"];
     }
-
-  if (type == nil)
-    {
-      NSString *path = [pbxFileReference objectForKey: @"path"];
-
-      if ([path hasSuffix: @".m"])
-        {
-          return @"sourcecode.c.objc";
-        }
-      else if ([path hasSuffix: @".c"])
-        {
-          return @"sourcecode.c.c";
-        }
-      else if ([path hasSuffix: @".cpp"])
-        {
-          return @"sourcecode.cpp.cpp";
-        }
-      else if ([path hasSuffix: @".mm"])
-        {
-          return @"sourcecode.cpp.objcpp";
-        }
-    }
-
+  
   return type;
-}
-
-- (void) retrieveShellCommandsFromBuildPhase: (NSDictionary *)buildPhase
-			    andStoreResultIn: (NSMutableDictionary *)aDictionary
-{
-  NSString *script = [buildPhase objectForKey: @"shellScript"];
-  NSString *name = [NSString stringWithFormat: @"script_%d.sh",[script hash]];
-
-  // add script...
-  [aDictionary setObject: script forKey: name];
 }
 
 - (void) retrieveSourceFileListFromBuildPhase: (NSDictionary *)buildPhase
@@ -489,76 +329,50 @@
   NSString     *buildPhaseType = [buildPhase objectForKey: @"isa"];
   NSEnumerator *e              = [files objectEnumerator];
   NSString     *pbxBuildFile;
-  NSMutableArray *cFiles, *mFiles, *cppFiles, *mmFiles;
+  NSMutableArray *cFiles, *mFiles, *cppFiles;
 
   // File arrays...
   cFiles = [NSMutableArray arrayWithCapacity: 50];
   mFiles = [NSMutableArray arrayWithCapacity: 50];
   cppFiles = [NSMutableArray arrayWithCapacity: 50];
-  mmFiles = [NSMutableArray arrayWithCapacity: 50];
-
+ 
   // Add files...
   NSDebugMLog(@"Adding files for buildPhase: %@", buildPhaseType);
   while ( (pbxBuildFile = [e nextObject]) )
     {
-      NSString *pbxFileReference = [[objects objectForKey: pbxBuildFile]
+      NSString *pbxFileReference = [[objects objectForKey: pbxBuildFile] 
 				     objectForKey: @"fileRef"];
       NSString *path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
       NSString *type = [self lookupResourceTypeOfPbxBuildFileRef: pbxBuildFile];
-
+      
       NSDebugMLog(@"Looking up file handle: %@", pbxBuildFile);
       if([type isEqual: @"sourcecode.c.c"])
 	{
-	  [self addPath: path
+	  [self addPath: path 
 		withFileReferenceKey: pbxFileReference
 		toArray: cFiles
 		type: buildPhaseType];
 	}
       else if([type isEqual: @"sourcecode.cpp.cpp"])
 	{
-	  [self addPath: path
+	  [self addPath: path 
 		withFileReferenceKey: pbxFileReference
 		toArray: cppFiles
 		type: buildPhaseType];
 	}
       else if([type isEqual: @"sourcecode.c.objc"])
 	{
-	  [self addPath: path
+	  [self addPath: path 
 		withFileReferenceKey: pbxFileReference
 		toArray: mFiles
 		type: buildPhaseType];
 	}
-      else if([type isEqual: @"sourcecode.cpp.objcpp"])
-	{
-	  [self addPath: path
-		withFileReferenceKey: pbxFileReference
-		toArray: mmFiles
-		type: buildPhaseType];
-	}
     }
 
-  // Add arrays to the dictionary, if they're not empty...
-  if([aDictionary objectForKey: @"c"] != nil)
-    {
-      [cFiles addObjectsFromArray: [aDictionary objectForKey: @"c"]];
-    }
-  if([aDictionary objectForKey: @"m"] != nil)
-    {
-      [mFiles addObjectsFromArray: [aDictionary objectForKey: @"m"]];
-    }
-  if([aDictionary objectForKey: @"cpp"] != nil)
-    {
-      [cppFiles addObjectsFromArray: [aDictionary objectForKey: @"cpp"]];
-    }
-  if([aDictionary objectForKey: @"mm"] != nil)
-    {
-      [mmFiles addObjectsFromArray: [aDictionary objectForKey: @"mm"]];
-    }
-
+  // Add arrays to the dictionary...
   [aDictionary setObject: cFiles forKey: @"c"];
   [aDictionary setObject: mFiles forKey: @"m"];
   [aDictionary setObject: cppFiles forKey: @"cpp"];
-  [aDictionary setObject: mmFiles forKey: @"mm"];
 }
 
 - (NSString *) lookupResourcesOfPbxBuildFileRef: (NSString *)pbxBuildFileRef;
@@ -568,13 +382,13 @@
   NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
 
   NSDebugMLog(@"Looking up file handle: %@", pbxBuildFileRef);
-
+  
   // if the resource is localized we have a PBXVariantGroup instead of
   // PBXFileReference
-  if ([[pbxFileReference objectForKey: @"isa"]
+  if ([[pbxFileReference objectForKey: @"isa"] 
 	isEqual: @"PBXVariantGroup"])
     {
-      NSEnumerator *e = [[pbxFileReference objectForKey: @"children"]
+      NSEnumerator *e = [[pbxFileReference objectForKey: @"children"] 
 			  objectEnumerator];
       NSString     *fileRef;
       NSString     *fileName = nil;
@@ -584,11 +398,11 @@
       while ( (fileRef = [e nextObject]) )
 	{
 	  NSDictionary *pbxFileReference = [objects objectForKey: fileRef];
-	  NSString     *path             = [pbxFileReference
+	  NSString     *path             = [pbxFileReference 
 					     objectForKey: @"path"];
-	  if (fileName != nil &&
+	  if (fileName != nil && 
 	      !([[path lastPathComponent] isEqual: fileName]) )
-	    NSLog(@"Warning: Got multiple file names for Resource: %@, %@",
+	    NSLog(@"Warning: Got multiple file names for Resource: %@, %@", 
 		  [path lastPathComponent], fileName);
 
 	  fileName = [path lastPathComponent];
@@ -618,152 +432,139 @@
   NSEnumerator *e              = [files objectEnumerator];
   NSString     *pbxBuildFile;
 
+  NSDebugMLog(@"Adding files for buildPhase: %@", buildPhaseType);
+
   if ([buildPhaseType isEqual: @"PBXResourcesBuildPhase"])
     {
       while ( (pbxBuildFile = [e nextObject]) )
 	 {
-	  NSDictionary *ref;
-	  NSString     *refType;
-	  NSString     *path;
-
 	  NSDebugMLog(@"Looking up resource file handle: %@", pbxBuildFile);
-	  ref     = [objects objectForKey: pbxBuildFile];
-	  refType = [ref objectForKey: @"isa"];
+	  NSDictionary *ref     = [objects objectForKey: pbxBuildFile]; 
+	  NSString     *refType = [ref objectForKey: @"isa"];
+	  NSString     *path;
 
 	  if ([refType isEqual: @"PBXBuildFile"])
 	    {
-	      NSString *pbxFileReference =
-		[[objects objectForKey: pbxBuildFile]
+	      NSString *pbxFileReference = 
+		[[objects objectForKey: pbxBuildFile] 
  		  objectForKey: @"fileRef"];
 
-	      path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
+	      path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile]; 
 	      // path == nil means that lookupResourcesOfPbxBuildFileRef
 	      // found a localized resource which is added to
 	      // the localized resource fields by the method itself
-	      [self              addPath: path
+	      [self              addPath: path 
 		    withFileReferenceKey: pbxFileReference
 				 toArray: anArray
 				    type: buildPhaseType];
 	    }
 	  else
 	    {
-	      NSLog(@"Warning: Expected 'PBXBuildFile', got: '%@'",
-  		    refType);
+	      NSLog(@"Warning: Expected 'PBXBuildFile', got: '%@'", 
+  		    refType); 
 	      continue;
 	    }
 	}
     }
   else
-    {
-      while ( (pbxBuildFile = [e nextObject]) )
-        {
-          NSString *path;
-          NSString *pbxFileReference =
-            [[objects objectForKey: pbxBuildFile]
-              objectForKey: @"fileRef"];
+    while ( (pbxBuildFile = [e nextObject]) )
+      {
+	NSString *pbxFileReference = 
+	  [[objects objectForKey: pbxBuildFile] 
+	    objectForKey: @"fileRef"];
 
-          NSDebugMLog(@"Looking up file handle: %@", pbxBuildFile);
-          path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
-          NSDebugMLog(@"path: %@", path);
-          [self              addPath: path
-                withFileReferenceKey: pbxFileReference
-                             toArray: anArray
-                                type: buildPhaseType];
-        }
-    }
+	NSDebugMLog(@"Looking up file handle: %@", pbxBuildFile);
+	NSString *path = [self lookupResourcesOfPbxBuildFileRef: pbxBuildFile];
+	[self              addPath: path 
+	      withFileReferenceKey: pbxFileReference
+			   toArray: anArray
+			      type: buildPhaseType];
+      }
 }
 
-- (void)              addPath: (NSString *)path
-         withFileReferenceKey: (NSString *)fHandle
+- (void)              addPath: (NSString *)path 
+         withFileReferenceKey: (NSString *)fHandle 
                       toArray: (NSMutableArray *)anArray
 			 type: (NSString *)type
 {
-  if (path != nil)
+ if (path != nil)
     {
-      NSString *sourceTree = [[objects objectForKey: fHandle] objectForKey: @"sourceTree"];
+      NSString *sourceTree = [[objects objectForKey: fHandle] 
+			       objectForKey: @"sourceTree"];
 
-      if (sourceTree == nil || [sourceTree isEqual: @"<group>"])
-        {
-          NSString *groupPath = [project groupPathForFileReferenceKey: fHandle];
+      if ([sourceTree isEqual: @"<group>"])
+	{
+	  NSString *groupPath = 
+	    [project groupPathForFileReferenceKey: fHandle];
 
-          if ([type isEqual: @"PBXHeadersBuildPhase"])
-            {
-              NSString *dir = [path stringByDeletingLastPathComponent];
+	  if ([type isEqual: @"PBXHeadersBuildPhase"])
+	    {
+	      NSString *dir = [path stringByDeletingLastPathComponent];
+	      if (![dir isEqual: @""])
+		[headerNonGroupDirs addObject: dir];
+	    }
 
-              if (![dir isEqual: @""])
-                [headerNonGroupDirs addObject: dir];
-            }
+	  if (groupPath != nil)
+	    {
+	      // adding path components of group path to include dirs
+	      if (![type isEqual: @"PBXResourcesBuildPhase"])
+		[self addPathComponentsToIncludeDirs: 
+			[[[groupPath stringByAppendingPathComponent: path]
+			   stringByDeletingLastPathComponent]
+			  pathComponents]];
 
-          if (groupPath != nil)
-            {
-              // adding path components of group path to include dirs
-              if (![type isEqual: @"PBXResourcesBuildPhase"])
-                [self addPathComponentsToIncludeDirs: [[[groupPath stringByAppendingPathComponent: path] stringByDeletingLastPathComponent] pathComponents]];
+	      NSDebugMLog(@"Adding file with group Path '%@': %@", 
+			 groupPath,
+			 path);
+	      [anArray addObject: 
+			 [groupPath 
+			   stringByAppendingPathComponent: path]];
+	    }
+	  else 
+	    {
+	      NSDebugMLog(@"Adding file with Path '%@'", path);
+	      if([[path pathComponents] count] > 1)
+		[self addPathComponentsToIncludeDirs: 
+			[[path stringByDeletingLastPathComponent]
+			  pathComponents]];
+	      if([anArray containsObject: path] == NO)
+		{
+		  [anArray addObject: path];
+		}
+	    }
+	}
+      else if ([sourceTree isEqual: @"SOURCE_ROOT"]) 
+	{
+	  NSString *newPath = [@"./" stringByAppendingPathComponent: path];
 
-              NSDebugMLog(@"Adding file with group Path '%@': %@", groupPath, path);
+	  [self addPathComponentsToIncludeDirs: 
+		  [[path stringByDeletingLastPathComponent]
+		    pathComponents]];
 
-              [anArray addObject: [groupPath stringByAppendingPathComponent: path]];
-            }
-          else
-            {
-              NSDebugMLog(@"Adding file with Path '%@'", path);
-              if([[path pathComponents] count] > 1)
-                [self addPathComponentsToIncludeDirs: [[path stringByDeletingLastPathComponent] pathComponents]];
-
-              if([anArray containsObject: path] == NO)
-                {
-                  [anArray addObject: path];
-                }
-            }
-        }
-      else if ([sourceTree isEqual: @"SOURCE_ROOT"])
-        {
-          NSString *newPath = [@"./" stringByAppendingPathComponent: path];
-
-          [self addPathComponentsToIncludeDirs: [[path stringByDeletingLastPathComponent] pathComponents]];
-
-          NSDebugMLog(@"Adding file with SOURCE_ROOT-path: %@", newPath);
-
-          [anArray addObject: path];
-        }
+	  NSDebugMLog(@"Adding file with SOURCE_ROOT-path: %@", newPath);
+	  [anArray addObject: path];
+	}
       else if ([sourceTree isEqual: @"<absolute>"])
-        {
-
-          NSDebugMLog(@"Adding file with absolute path: %@", path);
-          [anArray addObject: path];
-        }
-      else if ([sourceTree isEqual: @"SDKROOT"])
-        {
-          // On OS X this would be something under /Develeoper, but on all *nix systems
-          // I know of, this would simply be /
-          // TODO: add a variable for SDKROOT that defaults to "/"
-          NSString *newPath = [@"/" stringByAppendingPathComponent: path];
-
-          [self addPathComponentsToIncludeDirs: [[path stringByDeletingLastPathComponent] pathComponents]];
-
-          NSDebugMLog(@"Adding file with SDKROOT-path: %@", newPath);
-          [anArray addObject: newPath];
-
-        }
+	{
+	  NSDebugMLog(@"Adding file with absolute path: %@", path);
+	  [anArray addObject: path];
+	}
       else if ([sourceTree isEqual: @"BUILT_PRODUCTS_DIR"])
-        {
-          ; // FIXME: No support for Products yet.
+	; // FIXME: No support for Products yet.
           // put all the built products into one dir and symlink it
           // into all the subprojects
-        }
     }
 }
 
 @end
 
 @implementation PBPbxNativeTarget
-
-- (id) initWithProject: (PBPbxProject *)aproject
-             andTarget: (NSDictionary *)atarget
-         withTargetKey: (NSString *)atargetKey
+- (PBPbxNativeTarget *) initWithProject: (PBPbxProject *)aproject
+			      andTarget: (NSDictionary *)atarget
+			  withTargetKey: (NSString *)atargetKey
 {
   BOOL success = NO;
-
+  
   self = [super init];
   ASSIGN(self->project, aproject);
   ASSIGN(self->objects, [project objects]);
@@ -771,7 +572,6 @@
   ASSIGN(self->targetKey, atargetKey);
 
   ASSIGN(includeDirs,        [NSMutableSet     setWithCapacity: 5 ]);
-  ASSIGN(libraryDirs,        [NSMutableSet     setWithCapacity: 5 ]);
   ASSIGN(headers,            [NSMutableArray arrayWithCapacity: 50]);
   ASSIGN(headerNonGroupDirs, [NSMutableSet     setWithCapacity: 5]);
   ASSIGN(sources,            [NSMutableDictionary dictionary]);
@@ -779,17 +579,13 @@
   ASSIGN(languages,          [NSMutableSet     setWithCapacity: 5 ]);
   ASSIGN(localizedResources, [NSMutableArray arrayWithCapacity: 5 ]);
   ASSIGN(frameworks,         [NSMutableArray arrayWithCapacity: 5 ]);
-  ASSIGN(targetDependencies, [NSMutableArray arrayWithCapacity: 5 ]);
-  ASSIGN(scripts,            [NSMutableDictionary dictionary]);
+  ASSIGN(targetDependencies,       [NSMutableArray arrayWithCapacity: 5 ]);
 
-  // Capture the buildSettings dictionary
-  success = [self setBuildSettingsForTarget: atarget];
-
-  // set up include dirs
+  // set up include dirs  
   [self setUpIncludeDirsForTarget: atarget];
 
-  // Traverse the build phases
-  [self traverseBuildPhasesOfTarget: atarget];
+  // raverse the build phases
+  success = [self traverseBuildPhasesOfTarget: atarget];
 
   // store the dependency keys
   ASSIGN(dependencyKeys, [atarget objectForKey: @"dependencies"]);
@@ -812,7 +608,7 @@
   e = [dependencyKeys objectEnumerator];
   while ( (dependencyKey = [e nextObject]) )
     {
-      NSDictionary *pbxTargetDependency =
+      NSDictionary *pbxTargetDependency = 
 	[objects objectForKey: dependencyKey];
       NSString *aTargetKey = [pbxTargetDependency objectForKey: @"target"];
       NSEnumerator *t = [[project targets] objectEnumerator];
@@ -836,7 +632,7 @@
   // if anotherTarget is dependant on this target than anotherTarget is greater
   else if ([[anotherTarget targetDependencies] containsObject: self])
     return NSOrderedAscending;
-  else
+  else 
     return NSOrderedSame;
 }
 
@@ -844,10 +640,8 @@
 {
   if (self == anObject)
     return YES;
-
   if (![anObject isKindOfClass: [PBPbxNativeTarget class]])
     return NO;
-
   if ([[self targetKey] isEqual: [anObject targetKey]])
     return YES;
   else
@@ -856,116 +650,87 @@
 
 - (NSString *) targetKey
 {
-  return targetKey;
+  return AUTORELEASE(RETAIN(targetKey));
 }
 
 - (NSString *) targetName
 {
-  return targetName;
+  return AUTORELEASE(RETAIN(targetName));
 }
 
 - (NSString *) targetNameReplacingSpaces
 {
-  return [targetName stringByReplacingString: @" "
+  return [targetName stringByReplacingString: @" " 
 		     withString: @"_"];
-}
-
-- (NSString *) targetSubtype
-{
-  return targetSubtype;
 }
 
 - (NSString *) targetType
 {
-  return targetType;
+  return AUTORELEASE(RETAIN(targetType));
 }
 
-- (NSDictionary *) infoPlist
+- (NSString *) infoPlist
 {
-  return infoPlist;
+  return AUTORELEASE(RETAIN(infoPlist));
 }
 
 - (NSString *) infoPlistFile
 {
-  return infoPlistFile;
+  return AUTORELEASE(RETAIN(infoPlistFile));
 }
 
 - (NSString *) productVersion
 {
-  return productVersion;
+  return AUTORELEASE(RETAIN(productVersion));
 }
 
 - (NSMutableSet *) includeDirs
 {
-  return includeDirs;
-}
-
-- (NSMutableSet *) libraryDirs
-{
-  return libraryDirs;
+  return AUTORELEASE(RETAIN(includeDirs));
 }
 
 - (NSMutableArray *) headers
 {
-  return headers;
+  return AUTORELEASE(RETAIN(headers));
 }
 
 - (NSMutableSet *) headerNonGroupDirs;
 {
-  return headerNonGroupDirs;
+  return AUTORELEASE(RETAIN(headerNonGroupDirs));
 }
 
 - (NSMutableDictionary *) sources
 {
-  return sources;
+  return AUTORELEASE(RETAIN(sources));
 }
 
 - (NSMutableSet *) languages
 {
-  return languages;
+  return AUTORELEASE(RETAIN(languages));
 }
 
 - (NSMutableArray *) resources
 {
-  return resources;
+  return AUTORELEASE(RETAIN(resources));
 }
 
 - (NSMutableArray *) localizedResources
 {
-  return localizedResources;
+  return AUTORELEASE(RETAIN(localizedResources));
 }
 
 - (NSMutableArray *) frameworks
 {
-  return frameworks;
-}
-
-- (NSMutableDictionary *) scripts
-{
-  return scripts;
+  return AUTORELEASE(RETAIN(frameworks));
 }
 
 - (NSMutableSet *) targetDependencies
 {
-  return targetDependencies;
+  return AUTORELEASE(RETAIN(targetDependencies));
 }
 
-- (NSDictionary *) buildSettings
-{
-  return buildSettings;
-}
 
-- (NSString *) extension
-{
-  NSString * extension = [[self buildSettings] valueForKey: @"WRAPPER_EXTENSION"];
-
-  if (!extension)
-    extension = [self targetType];
-
-  return extension;
-}
-
-- (NSString *) description
+- (NSString *) description 
 {
   NSEnumerator       *e;
   PBPbxNativeTarget  *target;
@@ -1004,7 +769,7 @@
 - (void) dealloc
 {
   DESTROY(targetDependencies);
-  DESTROY(dependencyKeys);
+  DESTROY(dependencyKeys);  
   DESTROY(frameworks);
   DESTROY(localizedResources);
   DESTROY(languages);
@@ -1013,7 +778,6 @@
   DESTROY(headerNonGroupDirs);
   DESTROY(headers);
   DESTROY(includeDirs);
-  DESTROY(libraryDirs);
   DESTROY(infoPlist);
   DESTROY(infoPlistFile);
   DESTROY(productVersion);

@@ -23,7 +23,6 @@
 */
 
 #include "PBDevelopmentHelper.h"
-#include "PBPbxProject.h"
 
 @implementation PBDevelopmentHelper
 // Developing, Logging and Debugging
@@ -45,9 +44,8 @@
     e = [anObject objectEnumerator];
   while ( (key = [e nextObject]) )
     {
-      NSObject *o;
       NSLog([key description]);
-      o = [aDictionary objectForKey: key];
+      NSObject *o = [aDictionary objectForKey: key];
       NSLog([o description]);
     }
 }
