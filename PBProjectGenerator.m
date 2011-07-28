@@ -1,9 +1,9 @@
 /*
    Project: pbxbuild
 
-   Copyright (C) 2006 Free Software Foundation
+   Copyright (C) 2006, 2009 Free Software Foundation
 
-   Author: Hans Baier,,,
+   Author: Hans Baier, Gregory Casamento
 
    Created: 2006-08-09 13:27:20 +0200 by jack
 
@@ -260,25 +260,26 @@
   NSString          *targetType = [target targetType];
   NSString          *pcType;
 
+  /*
   if([targetType isEqual: @"app"])
     {
-      pcType = [NSString stringWithString: @"Application"];
+      pcType = @"Application";
     }
   else if([targetType isEqual: @"tool"])
     {
-      pcType = [NSString stringWithString: @"Tool"];
+      pcType = @"Tool";
     }
   else if([targetType isEqual: @"framework"])
     {
-      pcType = [NSString stringWithString: @"Framework"];
+      pcType = @"Framework";
     }
   else if([targetType isEqual: @"library"])
     {
-      pcType = [NSString stringWithString: @"Library"];
+      pcType = @"Library";
     }
   else if([targetType isEqual: @"bundle"])
     {
-      pcType = [NSString stringWithString: @"Bundle"];
+      pcType = @"Bundle";
     }
   else 
     {
@@ -294,7 +295,8 @@
   [self insertIncludeDirsForTarget: target inProject: projectDictionary];
   
   [self insertFrameworkEntriesForTarget: target inProject: projectDictionary];
-  
+  */
+
   return [projectDictionary description];
 }
 @end

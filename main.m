@@ -54,9 +54,8 @@ main(int argc, const char *argv[], char *env[])
   NSEnumerator               *e;
   NSFileManager              *fileManager;
   NSString                   *pbxbuildDir;
-  NSTask                     *make;
-  NSString                   *makefile;
   NSString                   *pcfile;
+  BOOL                       isstatic = NO;
 
   CREATE_AUTORELEASE_POOL(pool);
   fileManager = [NSFileManager defaultManager];
@@ -83,8 +82,10 @@ main(int argc, const char *argv[], char *env[])
 
   if (args_info.debug_given)
     {
+      NSMutableSet *debugSet;
+
       [[NSProcessInfo processInfo] setDebugLoggingEnabled: YES];
-      NSMutableSet *debugSet = [[NSProcessInfo processInfo] debugSet];
+      debugSet = [[NSProcessInfo processInfo] debugSet];
       [debugSet addObject: @"dflt"];
     }
 
@@ -142,7 +143,7 @@ main(int argc, const char *argv[], char *env[])
   e = [[project targets] objectEnumerator];
   while ( (target = [e nextObject]) )
     {
-      NSEnumerator *f = nil;
+      NSEnumerator *f = [projectDirEntries objectEnumerator];
       NSString   *projectDirEntry;
       NSString   *makefile;
       NSString   *newTName = [[target targetName] stringByReplacingString: @" "
@@ -151,46 +152,47 @@ main(int argc, const char *argv[], char *env[])
 	[pbxbuildDir stringByAppendingPathComponent:
 		       [newTName
 			 stringByAppendingPathExtension: [target targetType]]];
-      NSDictionary *sourceDict = [target sources];
-      NSMutableArray *sources = [NSMutableArray arrayWithCapacity: 50];
-      NSArray *headers = [target headers];
 
-      [sources addObjectsFromArray: [sourceDict objectForKey: @"m"]];
-      [sources addObjectsFromArray: [sourceDict objectForKey: @"c"]];
-      [sources addObjectsFromArray: [sourceDict objectForKey: @"cpp"]];
-      [sources addObjectsFromArray: headers];
-      f = [sources objectEnumerator];
+      // static?
+      if([[target targetSubtype] isEqual: @"static"])
+	{
+	  isstatic = YES;
+	}
 
-      [fileManager createDirectoryAtPath: targetDir 
-		   withIntermediateDirectories: YES
-		   attributes: nil
-		   error: NULL];
+      [fileManager createDirectoryAtPath: targetDir attributes: nil];
       
       // link all dir entries of the project directory into the target dir
       while ( (projectDirEntry = [f nextObject]) ) 
 	{
-	  NSString *source = 
-	    [projectDir stringByAppendingPathComponent: projectDirEntry];
 	  NSString *destination = 
 	    [targetDir stringByAppendingPathComponent: projectDirEntry];
-	  NSString *destDir = [destination stringByDeletingLastPathComponent];
-
-	  // Create any directories which might be in mentioned in the entry.
-	  [fileManager createDirectoryAtPath: destDir
-		       withIntermediateDirectories: YES
-		       attributes: nil
-		       error: NULL];
 
 	  // skip existing GNUmakefiles
 	  if ([projectDirEntry hasPrefix: @"GNUmakefile"])
 	    continue;
 					       
-	  NSDebugLog(@"Copying from '%@' to '%@'", 
-		     source,
-		     destination);
-	  [fileManager copyPath: source
-		       toPath: destination
-		       handler: nil];
+#ifdef __MINGW32__
+	  {
+	    NSString *source = 
+	      [projectDir stringByAppendingPathComponent: projectDirEntry];
+	    NSDebugLog(@"Copying from '%@' to '%@'", 
+		  source,
+		  destination);
+	    [fileManager copyPath: source
+			 toPath: destination
+			 handler: nil];
+	  }
+#else
+	  {
+	    NSString *source = 
+	      [@"../../"  stringByAppendingPathComponent: projectDirEntry];
+	    NSDebugLog(@"Creating symbolic link from '%@' to '%@'", 
+		       source,
+		       destination);
+	    [fileManager createSymbolicLinkAtPath: destination
+			 pathContent: source];
+	  }
+#endif
 	}
 
       // generate and write makefile
@@ -237,13 +239,15 @@ main(int argc, const char *argv[], char *env[])
 
   // finally changedir to the pbxbuild directory and run make
   [fileManager changeCurrentDirectoryPath: @"pbxbuild"];
-  // make = [[NSTask alloc] init];
-  // [make setLaunchPath: @"make"];
-  // [make setArguments: [NSArray arrayWithObjects: @"-k", nil]];
-  // [make launch];
-  system("make -k");
+  if(isstatic)
+    {
+      system("make shared=no");
+    }
+  else
+    {
+      system("make -k");
+    }
 
-  // RELEASE(make);
   AUTORELEASE(project);
   AUTORELEASE(pcGenerator);
   AUTORELEASE(makefileGenerator);

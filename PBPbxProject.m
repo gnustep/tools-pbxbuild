@@ -60,6 +60,7 @@
 	  NSString *path       = [child objectForKey: @"path"      ];
 	  NSString *sourceTree = [child objectForKey: @"sourceTree"];
 	  NSString *newPath    = nil;
+	  PBPbxGroup *pbxGroup;
 
 	  if ([sourceTree isEqual: @"<group>"])
 	    {
@@ -80,7 +81,7 @@
 	  NSDebugMLog(@"Examining Group with name: '%@'", 
 		     [child objectForKey: @"name"]);
 
-	  PBPbxGroup *pbxGroup = [[PBPbxGroup alloc] 
+	  pbxGroup = [[PBPbxGroup alloc] 
 				   initWithGroupKey: childKey
 				          inObjects: objects];
 	  // only save the groups with non-nil path, for those
@@ -118,14 +119,15 @@
 @implementation PBPbxProject
 - (PBPbxProject *) initWithFile: (NSString *)fileName
 {
-  self=[super init];
-  NSDictionary      *dict = 
-    [NSDictionary dictionaryWithContentsOfFile: fileName];
+  NSDictionary      *dict;
   NSMutableArray    *myTargets;
   NSEnumerator      *e;
   NSString          *targetKey;
   PBPbxNativeTarget *target;
 
+  self=[super init];
+
+  dict = [NSDictionary dictionaryWithContentsOfFile: fileName];
   ASSIGN(version, [dict objectForKey: @"objectVersion"]);
   ASSIGN(objects, [dict objectForKey: @"objects"]);
   ASSIGN(classes, [dict objectForKey: @"classes"]);

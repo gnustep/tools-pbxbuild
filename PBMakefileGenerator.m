@@ -1,9 +1,9 @@
 /*
    Project: pbxbuild
 
-   Copyright (C) 2006 Free Software Foundation
+   Copyright (C) 2006, 2009 Free Software Foundation
 
-   Author: Hans Baier,,,
+   Author: Hans Baier, Gregory Casamento
 
    Created: 2006-08-09 13:27:20 +0200 by jack
 
@@ -23,6 +23,7 @@
 */
 
 #include "PBMakefileGenerator.h"
+#include <Foundation/NSFileManager.h>
 
 @interface PBMakefileGenerator (Private)
 
@@ -37,6 +38,12 @@
  */
 - (void) insertFrameworkEntriesForTarget: (PBPbxNativeTarget *)target
 			      inMakefile: (NSMutableString *)makefile;
+
+/**
+ * insert the shell scripts into before-all::
+ */
+- (void) createShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
+                                inMakefile: (NSMutableString *)makefile;
 
 /**
  * generates sources, headers, resources, etc. section for
@@ -74,14 +81,22 @@
   while ( (includeDir = [e nextObject]) )
     [makefile appendFormat: @"\\\n\t-I%@", 
 	      [@"." stringByAppendingPathComponent: includeDir]];
-  
+
   //generate necessary dirs in obj
   [makefile appendString: @"\n\nbefore-all::"];
   e = [[target includeDirs] objectEnumerator];
   while ( (includeDir = [e nextObject]) )
-    [makefile appendFormat: 
-		@"\n\tmkdir -p ./obj/%@", 
-	      includeDir];  
+    {
+      [makefile appendFormat: 
+		  @"\n\tmkdir -p ./obj/%@", 
+		includeDir];
+    }
+
+  // add scripts to be executed..
+  [makefile appendString: @"\n"];
+  [self createShellScriptEntriesForTarget: target 
+	inMakefile: makefile];
+
   // if the target is a framework, make the header directories
   if ([[target targetType] isEqual: @"framework"])
     {
@@ -144,12 +159,12 @@
 	{
 	  continue;
 	}      
-      else if([name isEqual: @"Cocoa"] ||
-	      [name isEqual: @"Carbon"] ||
-	      [name isEqual: @"IOKit"] ||
-	      [name isEqual: @"Quartz"] ||
-	      [name isEqual: @"QuartzCore"] ||
-	      [name isEqual: @"QuickTime"] ||
+      else if([name isEqual: @"Cocoa"] || // covered by gnustep-gui and gnustep-base
+	      [name isEqual: @"Carbon"] || // not available...
+	      [name isEqual: @"IOKit"] || // not available...
+	      [name isEqual: @"Quartz"] || // not available... 
+	      [name isEqual: @"QuartzCore"] || // not available...
+	      [name isEqual: @"QuickTime"] || // not available...
 	      [name isEqual: @"SystemConfiguration"] ||
 	      [name isEqual: @"ApplicationServices"])
 	{
@@ -164,17 +179,78 @@
     }
 }
 
+- (void) createShellScriptEntriesForTarget: (PBPbxNativeTarget *)target 
+				inMakefile: (NSMutableString *)makefile
+{
+  NSEnumerator *e = [[target scripts] keyEnumerator];
+  NSString *key = nil;
+  NSString *script = nil;
+  NSFileManager *fm = [NSFileManager defaultManager];
+  NSString *currentPath = [fm currentDirectoryPath];
+  NSString *scriptsDir = [[currentPath stringByAppendingPathComponent: @"pbxbuild"]
+			   stringByAppendingPathComponent: @"scripts"];
+
+  if ([[target scripts] count] == 0)
+    return;
+
+  // create scripts directory...
+  [fm createDirectoryAtPath: scriptsDir 
+      attributes: nil];
+  
+  while ((key = [e nextObject]))
+    {
+      NSString *scriptPath = [scriptsDir stringByAppendingPathComponent: key];
+      NSString *scriptPreamble = @"# Pbxbuild - Script preamble\nBUILT_PRODUCTS_DIR=.\nSRCROOT=.\nACTION=build\nTARGET_BUILD_DIR=.\nUNLOCALIZED_RESOURCES_FOLDER_PATH=./Resources\nDERIVED_FILE_DIR=./DerivedSources\n# End preamble\n";
+      
+      script = [scriptPreamble stringByAppendingString: 
+				 [[target scripts] objectForKey: key]];
+      if(script == nil)
+	{
+	  continue;
+	}
+
+      // replace ditto command and other mac os x specific commands
+      // with equivalents...
+      script = [script stringByReplacingString: @"ditto" withString: @"cp -pr"];
+      
+      // script...
+      [script writeToFile: scriptPath
+	      atomically: YES];
+      
+      // add it to the makefile...
+      [makefile appendString: [NSString stringWithFormat: @"\t-sh %@\n",
+					scriptPath]]; 
+    }
+}
+
 - (void) generateStandardSectionsForTarget: (PBPbxNativeTarget *)target
 			        inMakefile: (NSMutableString *)makefile
 {
   NSString     *tName = [target targetNameReplacingSpaces];      
   NSString     *type  = [target targetType]; 
-  NSArray      *cFiles = [[[target sources] objectForKey: @"c"] sortedArrayUsingSelector:@selector(compare:)];
-  NSArray      *mFiles = [[[target sources] objectForKey: @"m"] sortedArrayUsingSelector:@selector(compare:)];
-  NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *cFiles = [[[target sources] objectForKey: @"c"] 
+			   sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *mFiles = [[[target sources] objectForKey: @"m"] 
+			   sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *cppFiles = [[[target sources] objectForKey: @"cpp"] 
+			     sortedArrayUsingSelector:@selector(compare:)];
+  NSArray      *mmFiles = [[[target sources] objectForKey: @"mm"] 
+			    sortedArrayUsingSelector:@selector(compare:)];
+  NSString     *version = [target productVersion];
 
-  [makefile appendFormat: @"\n\n%@_NAME=%@", [type uppercaseString], tName];
-  [makefile appendFormat: @"\n\nVERSION=%@", [target productVersion]];
+  // Version and name...
+  if([type isEqual: @"tool"])
+    {
+      tName = [tName stringByAppendingString: @"_tool"];
+    }
+
+  [makefile appendFormat: @"\n\n%@_NAME=%@", 
+	    [type uppercaseString], tName];
+
+  if(version != nil)
+    {
+      [makefile appendFormat: @"\n\nVERSION=%@", version];
+    }
 
   if ([type isEqual: @"framework"])
     [makefile appendFormat: @"\n%@_CURRENT_VERSION_NAME = %@",
@@ -186,6 +262,11 @@
 	withTargetName: tName
 	andPrefix: @"OBJC_FILES"];
   
+  [self enumerate: mmFiles
+	InMakefile: makefile
+	withTargetName: tName
+	andPrefix: @"OBJCC_FILES"];
+  
   [self enumerate: cFiles
 	InMakefile: makefile
 	withTargetName: tName
@@ -194,10 +275,10 @@
   [self enumerate: cppFiles
 	InMakefile: makefile
 	withTargetName: tName
-	andPrefix: @"CPP_FILES"];
+	andPrefix: @"CC_FILES"];
   
   // Header files...
-  if ([type isEqual: @"bundle"] || [type isEqual: @"framework"])
+  if ([type isEqual: @"bundle"] || [type isEqual: @"framework"] || [type isEqual: @"library"])
     {
       [self enumerate: [[target headers] sortedArrayUsingSelector:@selector(compare:)] 
 	    InMakefile: makefile
@@ -261,13 +342,14 @@
     {
       if ([[dependency targetType] isEqual: @"framework"])
 	{
+	  NSString *libDir;
 	  // linking the lib
 	  objcLibs = [objcLibs stringByAppendingFormat: @" -l%@", 
 			       [dependency targetNameReplacingSpaces]];
 	  
 	  // adding the library dir
 	  // The path to the subproject
-	  NSString *libDir = [@".." stringByAppendingPathComponent:
+	  libDir = [@".." stringByAppendingPathComponent:
 				[self getSubprojectNameForTarget: dependency]];
 	  // The path of the build product (The framework wrapper)
 	  libDir = [libDir stringByAppendingPathComponent: 
@@ -325,7 +407,7 @@
   // if not a simple project, create an aggregate project
 
   makefile = [NSMutableString string];
-  [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/common.make\n\n"];
+  [makefile appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/common.make\n\n"];
   [makefile appendString: @"SUBPROJECTS = "];
   
   e = [[project targets] objectEnumerator];
@@ -346,6 +428,8 @@
   NSMutableString   *makefile   = [NSMutableString string];
   NSString          *targetType = [target targetType];
 
+  [makefile appendString: @"#\n# This file generated by pbxbuild \n#\n\n"];
+
   [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/common.make\n\n"];
 
   [self generateStandardSectionsForTarget: target
@@ -362,22 +446,28 @@
   if ([@"app" isEqual: targetType])
     {
       [makefile
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/application.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/application.make\n"];
     }
   else if ([@"framework" isEqual: targetType])
     {
       [makefile 
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/framework.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/framework.make\n"];
     }
   else if ([@"bundle" isEqual: targetType])
     {
       [makefile 
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make\n"];
     }
   else if ([@"tool" isEqual: targetType])
     {
       [makefile 
-	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make"];
+	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/tool.make\n"];
+    }
+
+  // add includes
+  if([@"library" isEqual: targetType])
+    {
+      [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/library.make\n\n"];
     }
 
   return makefile;

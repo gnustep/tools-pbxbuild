@@ -28,6 +28,8 @@
 #include <Foundation/Foundation.h>
 @class PBPbxProject;
 
+#define PBX_VERSION_SNOWLEOPARD @"45"
+#define PBX_VERSION_LEOPARD @"44"
 #define PBX_VERSION_TIGER @"42"
 #define PBX_VERSION_PANTHER @"39"
 
@@ -39,7 +41,8 @@
   NSString            *targetKey;
   NSString            *targetName;
   NSString            *targetType;
-  
+  NSString            *targetSubtype;
+
   NSString            *infoPlistFile;
   NSDictionary        *infoPlist;
   NSString            *productVersion;
@@ -53,6 +56,7 @@
   NSMutableArray      *localizedResources;
   NSMutableArray      *frameworks;
   NSMutableArray      *dependencyKeys;
+  NSMutableDictionary *scripts;
   NSMutableSet        *targetDependencies;
 }
 /**
@@ -112,6 +116,12 @@
 - (NSString *) targetType;
 
 /**
+ * Returns the subtype of the given target.  Null if none
+ * is specified.
+ */
+- (NSString *) targetSubtype;
+
+/**
  * getter Method
  */
 - (NSString *) infoPlist;
@@ -165,6 +175,11 @@
  * getter Method: returns an Array of [NSString]
  */
 - (NSMutableArray *) frameworks;
+
+/**
+ * getter Method: returns an Dictionary of [NSString]
+ */
+- (NSMutableDictionary *) scripts;
 
 /**
  * getter Method: returns an Array of [PBPbxNativeTarget]

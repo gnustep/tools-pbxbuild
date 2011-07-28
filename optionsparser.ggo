@@ -9,3 +9,4 @@ option  "project"          p "The Project to build (.xcode, .xcodeproj)"      st
 
 option  "generate-makefile-only"        g "This only generates project makefiles without running make"        flag       off
 option  "debug"                         d "Turn on debug logging"	flag	off
+# option  "symbolic-links"                s "Generate the directory with symbolic links, this flag has no effect on operating systems that do not support symbolic links"	flag	off
