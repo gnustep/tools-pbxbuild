@@ -37,7 +37,7 @@
  * designated initializer, aProject is the project which Makefile 
  * is to be generated
  */
-- (PBMakefileGenerator *) initWithProject: (PBPbxProject *) aProject;
+- (id) initWithProject: (PBPbxProject *) aProject;
 
 - (void) dealloc;
 

@@ -40,7 +40,7 @@ static
 void clear_args (struct gengetopt_args_info *args_info);
 
 static int
-cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required, const char *additional_error);
+cmdline_parser_internal (int argc, const char **argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required, const char *additional_error);
 
 
 static char *
@@ -187,13 +187,13 @@ gengetopt_strdup (const char *s)
 }
 
 int
-cmdline_parser (int argc, char * const *argv, struct gengetopt_args_info *args_info)
+cmdline_parser (int argc, char const *argv[], struct gengetopt_args_info *args_info)
 {
   return cmdline_parser2 (argc, argv, args_info, 0, 1, 1);
 }
 
 int
-cmdline_parser2 (int argc, char * const *argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required)
+cmdline_parser2 (int argc, const char **argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required)
 {
   int result;
 
@@ -215,7 +215,7 @@ cmdline_parser_required (struct gengetopt_args_info *args_info, const char *prog
 }
 
 int
-cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required, const char *additional_error)
+cmdline_parser_internal (int argc, const char **argv, struct gengetopt_args_info *args_info, int override, int initialize, int check_required, const char *additional_error)
 {
   int c;	/* Character of the parsed option.  */
 
@@ -247,7 +247,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
       };
 
       stop_char = 0;
-      c = getopt_long (argc, argv, "hVp:gd", long_options, &option_index);
+      c = getopt_long (argc, (char * const*)argv, "hVp:gd", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 

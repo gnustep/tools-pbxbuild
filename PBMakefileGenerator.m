@@ -40,6 +40,12 @@
 			      inMakefile: (NSMutableString *)makefile;
 
 /**
+ * insert the CFLAGS entry for the compiler
+ */
+- (void) insertCFlagsForTarget: (PBPbxNativeTarget *)target
+					inMakefile: (NSMutableString *)makefile;
+
+/**
  * insert the shell scripts into before-all::
  */
 - (void) createShellScriptEntriesForTarget: (PBPbxNativeTarget *)target
@@ -68,6 +74,56 @@
 @end
 
 @implementation PBMakefileGenerator (Private)
+
+- (void) insertCFlagsForTarget: (PBPbxNativeTarget *)target
+                    inMakefile: (NSMutableString *)makefile
+{
+  NSString * targetcflags = [[target buildSettings] objectForKey: @"OTHER_CFLAGS"];
+	
+  NSString * cflags = [NSString stringWithFormat: @"\n\nADDITIONAL_CPPFLAGS+= -DGNUSTEP %@\n", targetcflags == nil ? @"" : targetcflags];
+	
+  /* C Dialect START */
+  NSString * gccCLanguageStandard = [[target buildSettings] objectForKey: @"GCC_C_LANGUAGE_STANDARD"];
+  if(gccCLanguageStandard)
+    {
+      cflags = [cflags stringByAppendingFormat: @" -std=%@",gccCLanguageStandard];
+    }
+  /* C Dialect END */
+	
+  /* Optimization Level START */
+  NSString * gccOptimizationLevel = [[target buildSettings] objectForKey: @"GCC_OPTIMIZATION_LEVEL"];
+  if(gccOptimizationLevel)
+    {
+      cflags = [cflags stringByAppendingFormat: @" -O%@", gccOptimizationLevel];
+    }
+  /* Optimization Level END */
+
+	
+  [makefile appendString:cflags];
+}
+
+-(NSArray*)includeDirectoriesForDepencies: (PBPbxNativeTarget *)target 
+{
+  if ([[target targetDependencies] count] == 0)
+    return nil;
+	
+  NSEnumerator		*e          = [[target targetDependencies] objectEnumerator];	
+  NSMutableArray	*nativeLibs = [NSMutableArray arrayWithCapacity:[[target targetDependencies] count]];
+  PBPbxNativeTarget	*dependency;
+  
+  while ( (dependency = [e nextObject]) )
+    {
+      if ([[dependency targetType] isEqual: @"framework"])
+        {
+          NSString *libDir;
+          libDir = [@".." stringByAppendingPathComponent:[self getSubprojectNameForTarget: dependency]];
+          
+          [nativeLibs addObject:libDir];
+        }
+    }
+  return nativeLibs;
+}
+
 - (void) insertIncludeDirsForTarget: (PBPbxNativeTarget *)target
 			 inMakefile: (NSMutableString *)makefile
 {
@@ -77,12 +133,41 @@
   if ([[target includeDirs] count] == 0)
     return;
 
-  [makefile appendFormat: @"\n\n%@_INCLUDE_DIRS=", [target targetNameReplacingSpaces]];
+  NSString     *tName = [target targetNameReplacingSpaces];      
+  NSString     *type  = [target targetType]; 
+
+  if([type isEqual: @"tool"])
+    {
+      tName = [tName stringByAppendingString: @"_tool"];
+    }
+
+  [makefile appendFormat: @"\n\n%@_INCLUDE_DIRS=", tName];
+
   while ( (includeDir = [e nextObject]) )
+    {
+      NSString *root = [includeDir isAbsolutePath] ? @"/" : @".";
+	  
+      [makefile appendFormat: @"\\\n\t-I%@", 
+                [root stringByAppendingPathComponent: includeDir]];
+    }
+
+  NSArray *frameworkSubprojects = [self includeDirectoriesForDepencies: target];
+  e = [frameworkSubprojects objectEnumerator];
+
+  while( (includeDir = [e nextObject]) )
     [makefile appendFormat: @"\\\n\t-I%@", 
 	      [@"." stringByAppendingPathComponent: includeDir]];
-
-  //generate necessary dirs in obj
+	
+  /* Library paths */
+  e = [[target libraryDirs] objectEnumerator];
+  [makefile appendFormat: @"\n\n%@_LIB_DIRS=", tName];
+  while ( (includeDir = [e nextObject]) )
+    {
+      NSString *root = [includeDir isAbsolutePath] ? @"/" : @".";
+      [makefile appendFormat: @"\\\n\t-L%@", [root stringByAppendingPathComponent: includeDir]];
+    }
+	
+  // generate necessary dirs in obj
   [makefile appendString: @"\n\nbefore-all::"];
   e = [[target includeDirs] objectEnumerator];
   while ( (includeDir = [e nextObject]) )
@@ -95,7 +180,7 @@
   // add scripts to be executed..
   [makefile appendString: @"\n"];
   [self createShellScriptEntriesForTarget: target 
-	inMakefile: makefile];
+                               inMakefile: makefile];
 
   // if the target is a framework, make the header directories
   if ([[target targetType] isEqual: @"framework"])
@@ -103,22 +188,22 @@
       NSString *nonGroupDir = nil;
 
       [makefile appendString: @"\n\nbefore-build-headers::"];
-      e = [[target includeDirs] objectEnumerator];
-      while ( (includeDir = [e nextObject]) )
-	[makefile appendFormat: 
-	  @"\n\tmkdir -p $(FRAMEWORK_NAME).framework/Versions/%@/Headers/%@", 
-		  [target productVersion], includeDir];  
+	
+      //  Make the symlink for other projects to be able to include
+      [makefile appendFormat: @"\n\tmkdir -p $(FRAMEWORK_NAME).framework/Versions/%@/Headers/",[target productVersion]];  
+      [makefile appendFormat: @"\n\tif [[ -h $(FRAMEWORK_NAME) ]]; then rm $(FRAMEWORK_NAME); fi", [target productVersion]];  
+      [makefile appendFormat: @"\n\tln -s $(FRAMEWORK_NAME).framework/Versions/%@/Headers $(FRAMEWORK_NAME)", [target productVersion]];  
       
       [makefile appendString: @"\n\nafter-build-headers::"];
       e = [[target headerNonGroupDirs] objectEnumerator];
       while ( (nonGroupDir = [e nextObject]) )
 	{
 	  NSString *prefix = [NSString stringWithFormat: 
-	    @"$(FRAMEWORK_NAME).framework/Versions/%@/Headers/",
+                                         @"$(FRAMEWORK_NAME).framework/Versions/%@/Headers/",
 				       [target productVersion]];
 				       
 	  [makefile appendFormat:
-	    @"\n\t(cd %@; ln -s %@/*.h .)",
+                      @"\n\t(cd %@; ln -s %@/*.h .)",
 		    prefix, nonGroupDir];
 	}
     }
@@ -129,36 +214,36 @@
 {
   NSEnumerator *e = [[target frameworks] objectEnumerator];
   NSString     *frameworkFullName = nil;
-    
+
   if ([[target frameworks] count] == 0)
     return;
-  
+  	
   [makefile appendString: @"\n\n"]; 
+
   while ( (frameworkFullName = [e nextObject]) )
     {
       NSString *framework = [frameworkFullName lastPathComponent];
       NSString *name = nil;
       NSString *nativeLib = nil;
       NSString *ext = [framework pathExtension];
-      
+    		
       if(framework == nil)
-	continue;
+        continue;
 
       if([ext isEqual: @"framework"])
-	{
-	  name = [framework stringByDeletingPathExtension];
-	}
-      else if([ext isEqual: @"a"])
-	{
-	  name = [[framework stringByDeletingPathExtension] 
-		   stringByReplacingString: @"lib" withString: @""];
-	}
-
+        {
+          name = [framework stringByDeletingPathExtension];
+        }
+      else if([ext isEqual: @"a"] || [ext isEqual: @"dylib"])
+        {
+          name = [[framework stringByDeletingPathExtension] stringByReplacingString: @"lib" withString: @""];
+        }
+		
       // Check for well known things that we already link or can't link...
       if(name == nil)
-	{
-	  continue;
-	}      
+        {
+          continue;
+        }      
       else if([name isEqual: @"Cocoa"] || // covered by gnustep-gui and gnustep-base
 	      [name isEqual: @"Carbon"] || // not available...
 	      [name isEqual: @"IOKit"] || // not available...
@@ -167,13 +252,17 @@
 	      [name isEqual: @"QuickTime"] || // not available...
 	      [name isEqual: @"SystemConfiguration"] ||
 	      [name isEqual: @"ApplicationServices"])
-	{
-	  // we already are linking parts of GNUstep equivalent to what's 
-	  // needed for the tooltype.  Also skip any other Apple specific
-	  // frameworks.
-	  continue; 
-	}
-
+        {
+          // we already are linking parts of GNUstep equivalent to what's 
+          // needed for the tooltype.  Also skip any other Apple specific
+          // frameworks.
+          continue; 
+        }
+      else if([name isEqual: @"JavaVM"]) // Apple's framwork which is essentially libjvm
+        {
+          name = @"jvm";
+        }
+   
       nativeLib = [NSString stringWithFormat: @"ADDITIONAL_NATIVE_LIBS+= %@\n",name];
       [makefile appendString: nativeLib]; 
     }
@@ -195,7 +284,7 @@
 
   // create scripts directory...
   [fm createDirectoryAtPath: scriptsDir 
-      attributes: nil];
+                 attributes: nil];
   
   while ((key = [e nextObject]))
     {
@@ -203,7 +292,7 @@
       NSString *scriptPreamble = @"# Pbxbuild - Script preamble\nBUILT_PRODUCTS_DIR=.\nSRCROOT=.\nACTION=build\nTARGET_BUILD_DIR=.\nUNLOCALIZED_RESOURCES_FOLDER_PATH=./Resources\nDERIVED_FILE_DIR=./DerivedSources\n# End preamble\n";
       
       script = [scriptPreamble stringByAppendingString: 
-				 [[target scripts] objectForKey: key]];
+                        [[target scripts] objectForKey: key]];
       if(script == nil)
 	{
 	  continue;
@@ -215,7 +304,7 @@
       
       // script...
       [script writeToFile: scriptPath
-	      atomically: YES];
+               atomically: YES];
       
       // add it to the makefile...
       [makefile appendString: [NSString stringWithFormat: @"\t-sh %@\n",
@@ -280,10 +369,41 @@
   // Header files...
   if ([type isEqual: @"bundle"] || [type isEqual: @"framework"] || [type isEqual: @"library"])
     {
-      [self enumerate: [[target headers] sortedArrayUsingSelector:@selector(compare:)] 
-	    InMakefile: makefile
+      // Get list of header files
+      NSArray        *headerFilePaths = [[target headers] sortedArrayUsingSelector:@selector(compare:)];
+      NSEnumerator   *e               = [headerFilePaths objectEnumerator];
+      NSMutableArray *headerFiles     = [[NSMutableArray alloc] initWithCapacity: [headerFilePaths count]];
+      NSMutableSet   *directories     = [[NSMutableSet alloc] initWithCapacity: [headerFilePaths count]]; //Set so we don't get duplicates
+      NSString       *path;
+
+      // Remove directory paths from them
+      while( (path = [e nextObject]) )
+        {
+          //Remove path components 
+          //TODO: Make this cross platform by using path component stuff
+          NSArray * components = [path componentsSeparatedByString: @"/"];
+			
+          [headerFiles addObject:[components lastObject]];
+          components = [components subarrayWithRange:NSMakeRange(0, [components count]-1)];
+          NSString * directory = [components componentsJoinedByString: @"/"];
+          // FIXME: Temporary, see todo a few lines below
+          if( [directories count] == 0)
+            [directories addObject: directory];
+        }
+	
+      // XCode puts ALL public headers into the Headers directory flat, in my experiences
+      [self enumerate: headerFiles
+           InMakefile: makefile
 	    withTargetName: tName
 	    andPrefix: @"HEADER_FILES"];
+		
+      // So it knows where to find these headers
+      //TODO: Can only specify on dir, so need to make a temp dir and copy/link them all to that
+      [self enumerate:  directories
+           InMakefile: makefile
+	    withTargetName: tName
+	    andPrefix: @"HEADER_FILES_DIR"];
+      [headerFiles release];
     }
   
   // Resource files...
@@ -322,53 +442,64 @@
 }
 
 - (void) linkDependenciesForTarget: (PBPbxNativeTarget *)target 
-		      inMakefile: (NSMutableString *)makefile
+                        inMakefile: (NSMutableString *)makefile
 {
-  NSEnumerator      *e                 = [[target targetDependencies] 
-					   objectEnumerator];
-  PBPbxNativeTarget *dependency;
-  NSMutableString   *additionalLibDirs = [NSMutableString string];
-  NSString          *objcLibs          = [NSString string];
-
   if ([[target targetDependencies] count] == 0)
     return;
+	
+  NSEnumerator      *e                 = [[target targetDependencies] objectEnumerator];
+	
+  PBPbxNativeTarget *dependency;
+  NSMutableString   *additionalLibDirs = [NSMutableString string];
 
-  objcLibs = [objcLibs stringByAppendingFormat: @"%@_OBJC_LIBS+=",
-		       [target targetNameReplacingSpaces]];
+  NSMutableString   *nativeLibs        = [NSMutableString string];
+  NSString          *objcLibs          = [NSString string];
 
+  objcLibs = [objcLibs stringByAppendingFormat: @"\n%@_OBJC_LIBS+=", [target targetNameReplacingSpaces]];
   [additionalLibDirs appendString: @"\nADDITIONAL_LIB_DIRS="];
-
+	
+  [nativeLibs appendString: @"\nADDITIONAL_NATIVE_LIBS +="];
+  
   while ( (dependency = [e nextObject]) )
     {
       if ([[dependency targetType] isEqual: @"framework"])
-	{
-	  NSString *libDir;
-	  // linking the lib
-	  objcLibs = [objcLibs stringByAppendingFormat: @" -l%@", 
-			       [dependency targetNameReplacingSpaces]];
-	  
-	  // adding the library dir
-	  // The path to the subproject
-	  libDir = [@".." stringByAppendingPathComponent:
-				[self getSubprojectNameForTarget: dependency]];
-	  // The path of the build product (The framework wrapper)
-	  libDir = [libDir stringByAppendingPathComponent: 
-			     [self getSubprojectNameForTarget: dependency]];
-	  libDir = [libDir stringByAppendingPathComponent: @"Versions"];
-	  libDir = [libDir stringByAppendingPathComponent: @"Current"];
-
-	  [additionalLibDirs appendFormat: @" -L%@", libDir];
-	}
+        {
+          NSString *libDir;
+          // linking the lib
+          [nativeLibs appendFormat: @" %@", 
+                      [dependency targetNameReplacingSpaces]];
+          
+          // adding the library dir
+          // The path to the subproject
+          libDir = [@".." stringByAppendingPathComponent:[self getSubprojectNameForTarget: dependency]];
+		
+          // The path of the build product (The framework wrapper)
+          libDir = [libDir stringByAppendingPathComponent: [self getSubprojectNameForTarget: dependency]];
+          libDir = [libDir stringByAppendingPathComponent: @"Versions"];
+          libDir = [libDir stringByAppendingPathComponent: @"Current"];
+          [additionalLibDirs appendFormat: @" -L%@", libDir];
+        }
+      else if([[dependency targetType] isEqual: @"library"])
+        {
+          NSString *libDir;
+          libDir = [@".." stringByAppendingPathComponent:[self getSubprojectNameForTarget: dependency]];
+          libDir = [libDir stringByAppendingPathComponent: @"obj"];
+          [additionalLibDirs appendFormat: @" -L%@", libDir];
+			  
+          [nativeLibs appendFormat: @" %@", [dependency targetNameReplacingSpaces]];	  
+        }
     }
 
   [makefile appendString: objcLibs];
   [makefile appendString: additionalLibDirs];
+	
+  [makefile appendString: nativeLibs];
 }
 @end
 
 
 @implementation PBMakefileGenerator
-- (PBMakefileGenerator *) initWithProject: (PBPbxProject *) aProject;
+- (id) initWithProject: (PBPbxProject *) aProject;
 {  
   self = [super init];
   [self setProject: aProject];
@@ -390,7 +521,7 @@
 - (NSString *) getSubprojectNameForTarget: (PBPbxNativeTarget *)target
 {
   return [[target targetNameReplacingSpaces] 
-	   stringByAppendingPathExtension: [target targetType]];
+	   stringByAppendingPathExtension: [target extension]];
 }
 
 - (NSString *) generateProjectMakefile
@@ -400,7 +531,7 @@
   NSMutableString   *makefile;
 
   // TODO: no special handling for simple projects (one target) so far.
-  //if ([project isSimpleProject] == YES)
+  // if ([project isSimpleProject] == YES)
   //  return [self generateMakefileForTarget: 
   //		   [[project targets] objectAtIndex: 0]];
 
@@ -430,19 +561,19 @@
 
   [makefile appendString: @"#\n# This file generated by pbxbuild \n#\n\n"];
 
+  if([[target targetSubtype] isEqualToString: @"static"])
+    [makefile appendString: @"# Static Library\nshared=no\n\n"];
+
   [makefile appendString: @"include $(GNUSTEP_MAKEFILES)/common.make\n\n"];
 
   [self generateStandardSectionsForTarget: target
 	inMakefile: makefile];      
 
   [self insertIncludeDirsForTarget: target inMakefile: makefile];
-
-  [self insertFrameworkEntriesForTarget: target inMakefile: makefile];
-
-  [makefile appendString: @"\n\nADDITIONAL_CPPFLAGS+= -DGNUSTEP\n"];
-
+  [self insertFrameworkEntriesForTarget: target inMakefile: makefile];	
   [self linkDependenciesForTarget: target inMakefile: makefile];
-
+  [self insertCFlagsForTarget:target inMakefile:makefile];
+	
   if ([@"app" isEqual: targetType])
     {
       [makefile
@@ -455,6 +586,12 @@
     }
   else if ([@"bundle" isEqual: targetType])
     {
+      NSString * wrapperExtension =  [[target buildSettings] objectForKey: @"WRAPPER_EXTENSION"];
+      if( wrapperExtension )
+        {
+          [makefile appendFormat: @"\nBUNDLE_EXTENSION = .%@\n",wrapperExtension];
+        }
+		
       [makefile 
 	appendString: @"\ninclude $(GNUSTEP_MAKEFILES)/bundle.make\n"];
     }

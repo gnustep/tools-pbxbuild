@@ -1,10 +1,35 @@
-2011-07-28 Gregory Casamento <greg.casamento@gmail.com>
-	
-	* *.[hm]: Rollback to 29000.
-	
+2010-12-28 Fred Kiefer <FredKiefer@gmx.de>
+
+	* PBPbxNativeTarget.h,
+	* PBPbxNativeTarget.m,
+	* PBPbxProject.m,
+	* main.m: Add some support for Jaguar projects.
+
+2010-01-26 Eric Wasylishen <ewasylishen@gmail.com>
+
+	* PBPbxNativeTarget.h: Rename PBX_VERSION_SNOWLEOPARD to
+	PBX_VERSION_SNOWLEOPARD_XCODE_3_1 and add
+	PBX_VERSION_SNOWLEOPARD_XCODE_3_2.
+	* PBPbxNativeTarget.m: Use the Tiger/Panther method of getting
+	the Info.plist path on Tiger and later.
+	Modify the search for "buildSettings" on XCODE_3_1 and XCODE_3_2
+	to also check the build configuration list (same as Tiger and Leopard)
+
+2009-12-15 04:29-WIT Hans Baier <hansfbaier@googlemail.com>
+
+	* PBPbxMakefileGenerator.m: fix crash bug: double release
+
+2009-12-01 17:55-EST Gregory John Casamento <greg.casamento@gmail.com>
+
+	* PBPbxNativeTarget.m: Replace @try/@catch with NS_DURING
+	and NS_HANDLER/ENDHANDLER
+
+2009-11-20 Hans Baier <hansfbaier@goolemail.com>
+	* applied Joe Matiellos patch after some style cleanup
+
 2009-09-02 Riccardo Mottola <rmottola@users.sf.net>
 	* PBPbxNativeTarget.[hm]: added snow leopard pbx constant
-	
+
 2009-08-16 09:36-EDT Gregory John Casamento <greg.casamento@gmail.com>
 
 	* PBPbxNativeTarget.m: Change to allow compilation of dynamic libs.
@@ -45,7 +70,7 @@
 
 2009-02-24 16:27-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
-	* main.m: Compile all static if one project is a static lib. 
+	* main.m: Compile all static if one project is a static lib.
 	* PBMakefileGenerator.m: Final changes to support static libraries.
 	* PBPbxNativeTarget.m: Removed unecessary autorelease/retain calls.
 
@@ -63,17 +88,17 @@
 2009-01-02 Riccardo Mottola <rmottola@users.sf.net>
 
 	* main.m
-	* PBPbxNativeTarget.m, PBPbxProject.m, PBDevelopmentHelper.m, 
+	* PBPbxNativeTarget.m, PBPbxProject.m, PBDevelopmentHelper.m,
 	PBMakefileGenerator.m: Removed c-99isms
 
 2008-11-12 01:49-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
-	* main.m: Copy headers only from target directories.  
+	* main.m: Copy headers only from target directories.
 
 2008-11-10 19:14-EST Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* main.m: Copy all headers since many xcode projects
-	don't include the headers in the project itself.  
+	don't include the headers in the project itself.
 	Also copy the resources.
 	* PBMakefileGenerator.m: Minor cleanup
 
@@ -88,7 +113,7 @@
 2008-10-26 21:00-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
 	* main.m: Copy only those files needed for each target instead
-	of linking ALL of the files in each directory. 
+	of linking ALL of the files in each directory.
 
 2008-10-24 21:44-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
@@ -109,7 +134,7 @@
 
 2008-10-12 21:46-EDT Gregory John Casamento <greg_casamento@yahoo.com>
 
-	* PBMakefileGenerator.m: Add QuartzCore to the list of excluded 
+	* PBMakefileGenerator.m: Add QuartzCore to the list of excluded
 	libraries.
 
 2008-10-12 21:43-EDT Gregory John Casamento <greg_casamento@yahoo.com>
@@ -163,7 +188,7 @@
 
 	* PBPbxGroup.m
 	* PBPbxNativeTarget.m: Remove duplications from the groups and
-	the source files to prevent "multiple definition" errors when 
+	the source files to prevent "multiple definition" errors when
 	building.
 
 2006-12-02 18:43-EST Gregory John Casamento <greg_casamento@yahoo.com>
@@ -185,7 +210,7 @@
 	* PBPbxNativeTarget.m ([PBPbxNativeTarget -addPath:withFileReferenceKey:toArray:type:]):
 	- the path of SOURCE_ROOT referenced files are added to include dirs
 	- refactored getters using return AUTORELEASE(RETAIN(xxx))
-	* PBPbxProject.m: refactored getters using 
+	* PBPbxProject.m: refactored getters using
 	  return AUTORELEASE(RETAIN(xxx))
 	* README: added
 	* cmdline.h:
@@ -200,9 +225,9 @@
 2006-09-02 Hans Baier  <hansfbaier@googlemail.com>
 	- Added support for target dependency resolution
 	- Added support for simple include path handling
-	Therefore,the  iTerm version included in Etoile can be 
+	Therefore,the  iTerm version included in Etoile can be
 	compiled with pbxbuild now.
-	
+
 2006-08-21 Hans Baier  <hansfbaier@googlemail.com>
 	* PBPbxGroup.m:
 	* PBPbxNativeTarget.m:
