@@ -80,7 +80,7 @@
 {
   NSString * targetcflags = [[target buildSettings] objectForKey: @"OTHER_CFLAGS"];
 	
-  NSString * cflags = [NSString stringWithFormat: @"\n\nADDITIONAL_CPPFLAGS+= -DGNUSTEP %@\n", targetcflags == nil ? @"" : targetcflags];
+  NSString * cflags = [NSString stringWithFormat: @"\n\nADDITIONAL_CPPFLAGS+= -DGNUSTEP %@", targetcflags == nil ? @"" : targetcflags];
 	
   /* C Dialect START */
   NSString * gccCLanguageStandard = [[target buildSettings] objectForKey: @"GCC_C_LANGUAGE_STANDARD"];
@@ -98,6 +98,7 @@
     }
   /* Optimization Level END */
 
+  cflags = [cflags stringByAppendingString: @"\n"];
 	
   [makefile appendString:cflags];
 }

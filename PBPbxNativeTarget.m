@@ -206,37 +206,13 @@
 
 - (BOOL) setBuildSettingsForTarget: (NSDictionary *)target
 {
-  NSString *version = [project version];
   NSString *key = [target objectForKey: @"productType"] ?
     [target objectForKey: @"productType"] : [target objectForKey: @"isa"];
 
-  if ([version isEqual: PBX_VERSION_JAGUAR] ||
-      [version isEqual: PBX_VERSION_PANTHER])
-    {
-      buildSettings = [target objectForKey: @"buildSettings"];
-    }
-  else if ([version isEqual: PBX_VERSION_TIGER])
+  buildSettings = [target objectForKey: @"buildSettings"];
+  if (nil == buildSettings)
     {
       buildSettings = [self getBuildSettingsTigerForTarget: target];
-    }
-  else if ([version isEqual: PBX_VERSION_LEOPARD])
-    {
-      // Seems to have the same behavior as TIGER version, where is uses a buildConfigurationList
-      buildSettings = [self getBuildSettingsTigerForTarget: target];
-    }
-  else if ([version isEqual: PBX_VERSION_SNOWLEOPARD_XCODE_3_1] ||
-           [version isEqual: PBX_VERSION_SNOWLEOPARD_XCODE_3_2])
-    {
-      buildSettings = [target objectForKey: @"buildSettings"];
-      if (nil == buildSettings)
-        {
-          buildSettings = [self getBuildSettingsTigerForTarget: target];
-        }
-    }
-  else
-    {
-      NSLog(@"Unsupported project version: '%@', quitting...",[project version]);
-      exit(EXIT_FAILURE);
     }
 
   ASSIGN(targetType, [self standardizeTargetType: key]);
@@ -258,7 +234,6 @@
 - (void) traverseBuildPhasesOfTarget: (NSDictionary *)target
 {
   NSString     *buildPhaseKey;
-  NSDictionary *buildPhase;
   NSEnumerator *e;
 
   if ([[project version] isEqual: PBX_VERSION_PANTHER] ||
@@ -272,18 +247,25 @@
     {
       ASSIGN(infoPlistFile, [buildSettings objectForKey: @"INFOPLIST_FILE"]);
 
-      // Replace CFBundleExecutable = "${EXECUTABLE_NAME}" and CFBundleIdentifier = ${PRODUCT_NAME:identifier}
-      // with the proper values
-      NSMutableDictionary * mutableInfo = [NSMutableDictionary dictionaryWithContentsOfFile:infoPlistFile];
-      NSString * bundleExecutable = [mutableInfo valueForKey: @"CFBundleExecutable"];
-      NSString * bundleIdentifier = [mutableInfo valueForKey: @"CFBundleIdentifier"];
-      bundleExecutable = [bundleExecutable stringByReplacingString: @"${EXECUTABLE_NAME}" withString:[self targetName]];
-      bundleIdentifier = [bundleIdentifier stringByReplacingString: @"${PRODUCT_NAME:identifier}" withString:[self targetName]];
-
-      [mutableInfo setValue:bundleExecutable forKey: @"CFBundleExecutable"];
-      [mutableInfo setValue:bundleIdentifier forKey: @"CFBundleIdentifier"];
-
-      ASSIGN(infoPlist, [mutableInfo copy]);
+      if (nil != infoPlistFile)
+        {
+          // Replace CFBundleExecutable = "${EXECUTABLE_NAME}" and CFBundleIdentifier = ${PRODUCT_NAME:identifier}
+          // with the proper values
+          NSMutableDictionary * mutableInfo = [NSMutableDictionary dictionaryWithContentsOfFile:infoPlistFile];
+          NSString * bundleExecutable = [mutableInfo valueForKey: @"CFBundleExecutable"];
+          NSString * bundleIdentifier = [mutableInfo valueForKey: @"CFBundleIdentifier"];
+          bundleExecutable = [bundleExecutable stringByReplacingString: @"${EXECUTABLE_NAME}" withString:[self targetName]];
+          bundleIdentifier = [bundleIdentifier stringByReplacingString: @"${PRODUCT_NAME:identifier}" withString:[self targetName]];
+          
+          [mutableInfo setValue:bundleExecutable forKey: @"CFBundleExecutable"];
+          [mutableInfo setValue:bundleIdentifier forKey: @"CFBundleIdentifier"];
+          
+          ASSIGN(infoPlist, [mutableInfo copy]);
+        }
+      else
+        {
+          infoPlist = [NSDictionary new];
+        }
     }
 
   ASSIGN(productVersion, [infoPlist objectForKey: @"CFBundleVersion"]);
@@ -294,8 +276,9 @@
 
   // get the files involved in building the target
   e = [[target objectForKey: @"buildPhases"] objectEnumerator];
-  while ( (buildPhaseKey = [e nextObject]) )
+  while ((buildPhaseKey = [e nextObject]) != nil)
     {
+      NSDictionary *buildPhase;
       NSString *buildPhaseType;
 
       // buildPhase is just a reference, so look it up
@@ -329,6 +312,10 @@
 	  [self retrieveShellCommandsFromBuildPhase: buildPhase
                                    andStoreResultIn: scripts];
 	}
+      else
+        {
+          NSLog(@"Unsupported build phase: '%@', ignoring...", buildPhaseType);
+        }
     }
 }
 
@@ -765,6 +752,9 @@
   BOOL success = NO;
 
   self = [super init];
+  if (self == nil)
+    return nil;
+
   ASSIGN(self->project, aproject);
   ASSIGN(self->objects, [project objects]);
   RETAIN(atarget);
