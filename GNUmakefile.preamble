@@ -20,6 +20,3 @@ ADDITIONAL_INCLUDE_DIRS +=
 # Additional library directories the linker should search
 ADDITIONAL_LIB_DIRS += 
 
-# Additional TOOL libraries to link
-ADDITIONAL_TOOL_LIBS += 
-

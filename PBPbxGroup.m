@@ -25,7 +25,7 @@
 #include "PBPbxGroup.h"
 
 @implementation PBPbxGroup
-- (id) initWithGroupKey: (NSString *)groupKey inObjects: myobjects
+- (PBPbxGroup *) initWithGroupKey: (NSString *)groupKey inObjects: myobjects
 {
   RETAIN(groupKey);
   self = [super init];
