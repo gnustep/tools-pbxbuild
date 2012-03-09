@@ -193,7 +193,7 @@
 		     forKey: @"LOCALIZED_RESOURCES"];
   
   [projectDictionary setObject: nibFiles
-		     forKey:@"INTERFACES"];
+		     forKey: @"INTERFACES"];
   
   [projectDictionary setObject: languages
 		     forKey: @"USER_LANGUAGES"];
@@ -203,7 +203,7 @@
 
 
 @implementation PBProjectGenerator
-- (PBProjectGenerator *) initWithProject: (PBPbxProject *) aProject;
+- (id) initWithProject: (PBPbxProject *) aProject;
 {  
   self = [super init];
   if(self != nil)
@@ -226,9 +226,9 @@
 }
 
 - (NSString *) getSubprojectNameForTarget: (PBPbxNativeTarget *)target
-{
+{	
   return [[target targetNameReplacingSpaces] 
-	   stringByAppendingPathExtension: [target targetType]];
+	   stringByAppendingPathExtension: [target extension]];
 }
 
 - (NSString *) generateProjectFile
@@ -257,8 +257,8 @@
 - (NSString *) generateProjectForTarget: (PBPbxNativeTarget *)target
 {
   NSMutableDictionary   *projectDictionary   = [NSMutableDictionary dictionary];
-  NSString          *targetType = [target targetType];
-  NSString          *pcType;
+  // NSString          *targetType = [target targetType];
+  // NSString          *pcType;
 
   /*
   if([targetType isEqual: @"app"])

@@ -46,9 +46,9 @@ extern const char *gengetopt_args_info_purpose;
 extern const char *gengetopt_args_info_usage;
 extern const char *gengetopt_args_info_help[];
 
-int cmdline_parser (int argc, char * const *argv,
+int cmdline_parser (int argc, char const *argv[],
   struct gengetopt_args_info *args_info);
-int cmdline_parser2 (int argc, char * const *argv,
+int cmdline_parser2 (int argc, const char **argv,
   struct gengetopt_args_info *args_info,
   int override, int initialize, int check_required);
 int cmdline_parser_file_save(const char *filename,

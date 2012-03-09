@@ -26,6 +26,7 @@
 #define _PBPBXGROUP_H_
 
 #include <Foundation/Foundation.h>
+#include "PBPbxProject.h"
 
 @interface PBPbxGroup : NSObject
 {
@@ -39,7 +40,7 @@
  * Designated Initializer: groupKey is the key of a group in the 
  * NSDictionary objects
  */
-- (PBPbxGroup *) initWithGroupKey: (NSString *)groupKey inObjects: objects;
+- (id) initWithGroupKey: (NSString *)groupKey inObjects: objects;
 
 - (void) dealloc;
 

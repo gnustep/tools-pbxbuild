@@ -1,5 +1,6 @@
-2012-03-08 18:56-EST Gregory John Casamento <greg.casamento@gmail.com>
+2012-03-09 12:13-EST Gregory John Casamento <greg.casamento@gmail.com>
 
+	* ChangeLog
 	* cmdline.c
 	* cmdline.h
 	* GNUmakefile
@@ -15,10 +16,7 @@
 	* PBPbxProject.h
 	* PBPbxProject.m
 	* PBProjectGenerator.h
-	* PBProjectGenerator.m: Reverting back to revision 29000.  pbxbuild is
-	broken on the current revision for most purposes.  Also pbxbuild is
-	being superceded by buildtool and the xcode/xclib framework which does
-	not generate makefiles.
+	* PBProjectGenerator.m
 
 2011-08-13 Fred Kiefer <FredKiefer@gmx.de>
 

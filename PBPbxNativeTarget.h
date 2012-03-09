@@ -28,10 +28,12 @@
 #include <Foundation/Foundation.h>
 @class PBPbxProject;
 
-#define PBX_VERSION_SNOWLEOPARD @"45"
+#define PBX_VERSION_SNOWLEOPARD_XCODE_3_2 @"46"
+#define PBX_VERSION_SNOWLEOPARD_XCODE_3_1 @"45"
 #define PBX_VERSION_LEOPARD @"44"
 #define PBX_VERSION_TIGER @"42"
 #define PBX_VERSION_PANTHER @"39"
+#define PBX_VERSION_JAGUAR @"38"
 
 @interface PBPbxNativeTarget : NSObject
 {
@@ -48,6 +50,7 @@
   NSString            *productVersion;
   
   NSMutableSet        *includeDirs;
+  NSMutableSet        *libraryDirs;
   NSMutableArray      *headers;
   NSMutableSet        *headerNonGroupDirs;
   NSMutableDictionary *sources;
@@ -58,15 +61,19 @@
   NSMutableArray      *dependencyKeys;
   NSMutableDictionary *scripts;
   NSMutableSet        *targetDependencies;
+	
+  NSDictionary        *buildSettings;
 }
+
 /**
  * <em>Designated Initializer</em>: Initializes this Class with
  * the given target as a [NSMutableDictionary] and objects
  * in order to look up the references stored in target .
  */
-- (PBPbxNativeTarget *) initWithProject: (PBPbxProject *)project
-			      andTarget: (NSDictionary *)target
-			  withTargetKey: (NSString *)targetKey;
+- (id) initWithProject: (PBPbxProject *)project
+             andTarget: (NSDictionary *)target
+         withTargetKey: (NSString *)targetKey;
+
 /**
  * traverses the dependency Keys for the target and
  * sets the field targetDependencies with links to the other [PBPbxNativeTarget]s
@@ -124,7 +131,7 @@
 /**
  * getter Method
  */
-- (NSString *) infoPlist;
+- (NSDictionary *) infoPlist;
 
 /**
  * getter Method
@@ -140,6 +147,11 @@
  * getter Method: returns an Array of [NSString]
  */
 - (NSMutableSet *) includeDirs;
+
+/**
+ * getter Method: returns an Array of [NSString]
+ */
+- (NSMutableSet *) libraryDirs;
 
 /**
  * getter Method: returns an Array of [NSString]
@@ -191,6 +203,16 @@
  * returns the description of the object
  */
 - (NSString *) description;
+
+/** 
+ * getter Method: returns a dictionary of the build settings
+ */
+- (NSDictionary *) buildSettings;
+
+/**
+ * getter Method: returns the proper extension
+ */
+- (NSString *) extension;
 
 - (void) dealloc;
 @end
