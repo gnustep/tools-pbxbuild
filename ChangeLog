@@ -1,5 +1,9 @@
 2012-03-08 18:56-EST Gregory John Casamento <greg.casamento@gmail.com>
 
+	* Undo previous reversion.
+
+2012-03-08 18:56-EST Gregory John Casamento <greg.casamento@gmail.com>
+
 	* cmdline.c
 	* cmdline.h
 	* GNUmakefile
