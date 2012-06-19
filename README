@@ -1,5 +1,5 @@
 GENERAL:
-
+ 
 This tool converts XCode(tm) projects into GNUmakefiles and builds them.
 Those GNUmakefiles may be the basis for further user modifications
 in order to make up for the platform differences of GNUstep and OS X.
@@ -43,3 +43,4 @@ without warning!
 
 Bug reports, comments and wishes welcome,
 please send to hansfbaier (AT) googlemail (dot) com
+
