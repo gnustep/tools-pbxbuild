@@ -1,4 +1,7 @@
 GENERAL:
+
+NOTE: pbxbuild is deprecated and is no longer maintained.  Please use
+      the buildtool + Xcode framework instead.
  
 This tool converts XCode(tm) projects into GNUmakefiles and builds them.
 Those GNUmakefiles may be the basis for further user modifications
