@@ -1,0 +1,7 @@
+PBXBUILD IS NO LONGER BEING ACTIVELY MAINTAINED.  PLEASE USE BUILDTOOL
+
+To use buildtool you must first build the Xcode framework in dev-libs and
+install it, then build the buildtool command line tool and install it.
+
+The buildtool takes the project bundle name as an argument or finds the bundle
+in the current directory and builds it.
