@@ -23,7 +23,6 @@
 */
 
 #include "PBDevelopmentHelper.h"
-#include "PBPbxProject.h"
 
 @implementation PBDevelopmentHelper
 // Developing, Logging and Debugging
@@ -36,7 +35,7 @@
             inDictionary: (id)aDictionary 
              explainedBy: (NSString *)explanation
 {
-  NSEnumerator *e = nil;
+  NSEnumerator *e;
   id key;
   NSLog(@"\n\n%@:\n",explanation);
   if ([anObject isKindOfClass: [NSDictionary class]])
