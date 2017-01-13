@@ -26,6 +26,13 @@
 #include "PBPbxProject.h"
 #include "PBDevelopmentHelper.h"
 
+@implementation NSArray (HandlePathComponents)
+
+- (NSArray *) pathComponents {
+    return self;
+}
+@end
+
 @interface PBPbxNativeTarget (Private)
 /**
  * rawType is transformed into a GNUmakefile compliant string
